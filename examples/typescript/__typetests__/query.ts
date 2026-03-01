@@ -19,3 +19,11 @@ collection.query(Q.and([Q.where(c, true)]))
 collection.query(Q.or([Q.where(c, true)]))
 collection.query(Q.on(t, [Q.where(c, true)]))
 collection.query().extend([Q.where(c, true)])
+
+// readonly arrays are accepted by query helpers
+const readonlyWhereList = [Q.where(c, true)] as const
+collection.query(readonlyWhereList)
+collection.query().extend(readonlyWhereList)
+collection.query(Q.and(readonlyWhereList))
+collection.query(Q.or(readonlyWhereList))
+collection.query(Q.on(t, readonlyWhereList))

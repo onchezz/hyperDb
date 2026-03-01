@@ -133,7 +133,7 @@ type _OnFunctionColumnComparison = (
   comparison: Comparison,
 ) => On
 type _OnFunctionWhere = (tableName: TableName<any>, where: Where) => On
-type _OnFunctionWhereList = (tableName: TableName<any>, where: Where[]) => On
+type _OnFunctionWhereList = (tableName: TableName<any>, where: ReadonlyArray<Where>) => On
 
 type OnFunction = _OnFunctionColumnValue &
   _OnFunctionColumnComparison &
@@ -147,8 +147,8 @@ type OnFunction = _OnFunctionColumnValue &
 // or: on('tableName', [where(...), where(...)])
 export const on: OnFunction
 
-export function experimentalJoinTables(tables: TableName<any>[]): JoinTables
+export function experimentalJoinTables(tables: ReadonlyArray<TableName<any>>): JoinTables
 
 export function experimentalNestedJoin(from: TableName<any>, to: TableName<any>): NestedJoinTable
 
-export function unsafeSqlQuery(sql: string, values?: Value[]): SqlQuery
+export function unsafeSqlQuery(sql: string, values?: ReadonlyArray<Value>): SqlQuery

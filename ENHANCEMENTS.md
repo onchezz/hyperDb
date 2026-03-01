@@ -20,3 +20,7 @@ This fork is set up to track upstream WatermelonDB and layer targeted improvemen
 1. One enhancement per branch/PR with tests included.
 2. Avoid cross-cutting refactors without benchmark evidence.
 3. Keep this file updated with completed work and follow-ups.
+
+## Progress
+
+1. 2026-03-01: Improved TypeScript ergonomics by accepting readonly arrays in query helper typings (`query`, `extend`, `Q.and`, `Q.or`, `Q.on`, `experimentalJoinTables`, `unsafeSqlQuery`) and added typetest coverage in `examples/typescript/__typetests__/query.ts`.
