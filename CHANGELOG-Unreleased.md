@@ -6,6 +6,8 @@
 
 ### New features
 
+- [Sync] Added peer sync transport layer (`createPeerSyncClient` / `startPeerSyncServer`) for WebRTC/Bluetooth/LAN channels, with secure codec support by default
+
 ### Fixes
 
 - [LokiJS] Multitab sync issue fix

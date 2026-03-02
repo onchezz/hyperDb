@@ -24,3 +24,4 @@ This fork is set up to track upstream WatermelonDB and layer targeted improvemen
 ## Progress
 
 1. 2026-03-01: Improved TypeScript ergonomics by accepting readonly arrays in query helper typings (`query`, `extend`, `Q.and`, `Q.or`, `Q.on`, `experimentalJoinTables`, `unsafeSqlQuery`) and added typetest coverage in `examples/typescript/__typetests__/query.ts`.
+2. 2026-03-02: Added peer sync transport API for secure P2P synchronization over app-defined channels (WebRTC/Bluetooth/LAN), including client/server RPC helpers, tests, and documentation for Expo New Architecture integration.

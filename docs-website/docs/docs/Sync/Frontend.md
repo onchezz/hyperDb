@@ -5,6 +5,8 @@ hide_title: true
 
 ## Implementing sync in frontend
 
+If you're synchronizing directly between devices over channels like WebRTC or Bluetooth, see [Peer-to-peer sync](../Sync/PeerToPeer.md).
+
 ## Using `synchronize()` in your app
 
 To synchronize, you need to pass `pullChanges` and `pushChanges` _(optional)_ that talk to your backend and are compatible with Watermelon Sync Protocol. The frontend code will look something like this:
@@ -307,5 +309,4 @@ In `pullChanges`, return an object with an extra `strategy` field
 - `sendCreatedAsUpdated: boolean` - if your backend can't differentiate between created and updated records, set this to `true` to supress warnings. Sync will still work well, however error reporting, and some edge cases will not be handled as well.
 - `conflictResolver: (TableName, local: DirtyRaw, remote: DirtyRaw, resolved: DirtyRaw) => DirtyRaw` - can be passed to customize how records are updated when they change during sync. See `src/sync/index.js` for details.
 - `onWillApplyRemoteChanges` - called after pullChanges is done, but before these changes are applied. Some stats about the pulled changes are passed as arguments. An advanced user can use this for example to show some UI to the user when processing a very large sync (could be useful for replacement syncs). Note that remote change count is NaN in turbo mode.
-
 

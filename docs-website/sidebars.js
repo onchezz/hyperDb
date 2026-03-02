@@ -32,6 +32,7 @@ const sidebars = {
     Sync: [
       'docs/Sync/Intro',
       'docs/Sync/Frontend',
+      'docs/Sync/PeerToPeer',
       'docs/Sync/Backend',
       'docs/Sync/Limitations',
       'docs/Sync/FAQ',

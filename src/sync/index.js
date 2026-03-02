@@ -138,3 +138,20 @@ export async function synchronize(args: SyncArgs): Promise<void> {
 export function hasUnsyncedChanges({ database }: $Exact<{ database: Database }>): Promise<boolean> {
   return require('./impl').hasUnsyncedChanges(database)
 }
+
+export {
+  createPeerSyncClient,
+  startPeerSyncServer,
+  insecureJsonPeerSyncCodec,
+} from './peer'
+
+export type {
+  PeerSyncMessage,
+  PeerSyncTransport,
+  PeerSyncCodec,
+  PeerSyncClient,
+  PeerSyncClientOptions,
+  PeerSyncAuthorizeArgs,
+  PeerSyncServerOptions,
+  PeerSyncServer,
+} from './peer'

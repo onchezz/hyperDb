@@ -91,3 +91,25 @@ export type SyncArgs = $Exact<{
 export function synchronize(args: SyncArgs): Promise<void>
 
 export function hasUnsyncedChanges({ database }: $Exact<{ database: Database }>): Promise<boolean>
+
+export {
+  createPeerSyncClient,
+  startPeerSyncServer,
+  insecureJsonPeerSyncCodec,
+} from './peer'
+
+export type {
+  PeerSyncMethod,
+  PeerSyncErrorPayload,
+  PeerSyncRequest,
+  PeerSyncSuccessResponse,
+  PeerSyncFailureResponse,
+  PeerSyncMessage,
+  PeerSyncTransport,
+  PeerSyncCodec,
+  PeerSyncClient,
+  PeerSyncClientOptions,
+  PeerSyncAuthorizeArgs,
+  PeerSyncServerOptions,
+  PeerSyncServer,
+} from './peer'
