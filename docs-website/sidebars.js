@@ -23,6 +23,7 @@ const sidebars = {
       // 'docs/Demo',
     ],
     Setup: [
+      'docs/EnhancedInstall',
       'docs/Installation',
       'docs/Setup',
       'docs/Schema',

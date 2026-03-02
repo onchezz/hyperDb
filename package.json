@@ -32,6 +32,8 @@
     "docs:dev": "./scripts/update-docusaurus && cd docs-website && yarn start",
     "docs:build": "./scripts/update-docusaurus && cd docs-website && yarn build",
     "docs:deploy": "./scripts/update-docusaurus && cd docs-website && yarn deploy",
+    "build:enhanced:npm": "./scripts/build-enhanced-npm-package.sh",
+    "publish:enhanced:npm": "./scripts/publish-enhanced-npm.sh",
     "postinstall": "patch-package"
   },
   "types": "src/index.d.ts",
