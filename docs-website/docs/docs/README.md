@@ -44,6 +44,19 @@ hide_title: true
 | 🔗 | **Relational.** Built on rock-solid [SQLite](https://www.sqlite.org) foundation |
 | ⚠️ | **Static typing** with [Flow](https://flow.org) or [TypeScript](https://typescriptlang.org) |
 
+## Enhanced fork additions
+
+This fork includes:
+
+1. Supabase-style reactive query API (`createReactiveClient`)
+2. React helpers (`useReactiveQuery`, `useReactiveSingle`, `ReactiveQuery`)
+3. Secure peer-to-peer sync transport primitives
+
+See:
+
+- [Reactive client](./Reactive.md)
+- [Peer-to-peer sync](./Sync/PeerToPeer.md)
+
 ## Why Watermelon?
 
 **WatermelonDB** is a new way of dealing with user data in React Native and React web apps.

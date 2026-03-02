@@ -81,6 +81,54 @@ peer.close()
 server.stop()
 ```
 
+## Transport adapter examples
+
+Peer sync is transport-agnostic. You map your channel to:
+
+```ts
+type PeerSyncTransport = {
+  send: (encodedMessage: string) => Promise<void> | void
+  subscribe: (listener: (encodedMessage: string) => Promise<void> | void) => (() => void) | void
+}
+```
+
+### WebRTC DataChannel sketch
+
+```ts
+const transport = {
+  send: (payload) => dataChannel.send(payload),
+  subscribe: (listener) => {
+    const handler = (event) => listener(event.data)
+    dataChannel.addEventListener('message', handler)
+    return () => dataChannel.removeEventListener('message', handler)
+  },
+}
+```
+
+### Bluetooth message bus sketch
+
+```ts
+const transport = {
+  send: (payload) => bluetoothSession.send(payload),
+  subscribe: (listener) => bluetoothSession.onMessage(listener),
+}
+```
+
+## Error and timeout behavior
+
+- Client requests time out after `30_000ms` by default (`timeoutMs` override available).
+- If codec decode/encode fails, request fails with sync error.
+- Server-side exceptions are serialized into `{ code, message }` error payloads.
+- `authorize()` failures are propagated to the caller as failed sync requests.
+
+## Production checklist
+
+1. Use encrypted codec (never plaintext mode).
+2. Use `authorize()` and rotate short-lived tokens.
+3. Add replay protection/session binding in your codec layer.
+4. Handle channel disconnects by calling `peer.close()` and retrying with backoff.
+5. Instrument `onError` to capture transport/codec/server failures.
+
 ## Expo New Architecture compatibility
 
 Peer sync module is pure JavaScript and does not require WatermelonDB native changes, so it works with Expo New Architecture setups as long as your chosen transport layer works there.
