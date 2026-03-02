@@ -55,6 +55,7 @@ This fork includes additional capabilities on top of upstream WatermelonDB:
 Documentation:
 
 - [Enhanced fork reference](https://github.com/onchezz/watermelondb-localfirst/blob/codex/enhancement-bootstrap/ENHANCED_DB_DOCUMENTATION.md)
+- [Installation + npm packaging guide](https://github.com/onchezz/watermelondb-localfirst/blob/codex/enhancement-bootstrap/NPM_PACKAGE_SETUP.md)
 - [Reactive client docs](https://onchezz.github.io/watermelondb-localfirst/docs/Reactive)
 - [Peer sync docs](https://onchezz.github.io/watermelondb-localfirst/docs/Sync/PeerToPeer)
 
