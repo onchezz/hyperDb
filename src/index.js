@@ -27,4 +27,13 @@ export type {
 } from './Schema'
 export type { SchemaMigrations } from './Schema/migrations'
 
+export { createReactiveClient } from './reactive'
+export type {
+  ReactiveClient,
+  ReactiveTableQuery,
+  ReactiveResponse,
+  ReactiveOrderOptions,
+  ReactiveUpsertOptions,
+} from './reactive'
+
 export { Q }
