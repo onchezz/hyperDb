@@ -6,9 +6,9 @@ PUBLISH_DIR="${PUBLISH_DIR:-$ROOT_DIR/.npm-package}"
 PACKAGE_SCOPE="${PACKAGE_SCOPE:-@onchezz}"
 PACKAGE_BASENAME="${PACKAGE_BASENAME:-watermelondb-localfirst}"
 PACKAGE_NAME="${PACKAGE_NAME:-$PACKAGE_SCOPE/$PACKAGE_BASENAME}"
-PACKAGE_REPOSITORY_URL="${PACKAGE_REPOSITORY_URL:-https://github.com/onchezz/watermelondb-enhanced.git}"
-PACKAGE_HOMEPAGE="${PACKAGE_HOMEPAGE:-https://github.com/onchezz/watermelondb-enhanced#readme}"
-PACKAGE_BUGS_URL="${PACKAGE_BUGS_URL:-https://github.com/onchezz/watermelondb-enhanced/issues}"
+PACKAGE_REPOSITORY_URL="${PACKAGE_REPOSITORY_URL:-https://github.com/onchezz/watermelondb-localfirst.git}"
+PACKAGE_HOMEPAGE="${PACKAGE_HOMEPAGE:-https://github.com/onchezz/watermelondb-localfirst#readme}"
+PACKAGE_BUGS_URL="${PACKAGE_BUGS_URL:-https://github.com/onchezz/watermelondb-localfirst/issues}"
 
 if [[ "${PACKAGE_NAME}" != @*/* ]]; then
   echo "PACKAGE_NAME must be scoped (example: @onchezz/watermelondb-localfirst)"

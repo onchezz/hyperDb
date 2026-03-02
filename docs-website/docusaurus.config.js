@@ -16,12 +16,12 @@ const config = {
   url: 'https://onchezz.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/watermelondb-enhanced/',
+  baseUrl: '/watermelondb-localfirst/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'onchezz', // Usually your GitHub org/user name.
-  projectName: 'watermelondb-enhanced', // Usually your repo name.
+  projectName: 'watermelondb-localfirst', // Usually your repo name.
 
   trailingSlash: false,
 
@@ -46,7 +46,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/onchezz/watermelondb-enhanced/edit/codex/enhancement-bootstrap/docs-website/',
+            'https://github.com/onchezz/watermelondb-localfirst/edit/codex/enhancement-bootstrap/docs-website/',
           routeBasePath: '/',
           path: 'docs',
           lastVersion: 'current',
@@ -95,7 +95,7 @@ const config = {
           },
           // {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/onchezz/watermelondb-enhanced',
+            href: 'https://github.com/onchezz/watermelondb-localfirst',
             label: 'GitHub',
             position: 'right',
           },
@@ -147,7 +147,7 @@ const config = {
               // },
               {
                 label: 'GitHub',
-                href: 'https://github.com/onchezz/watermelondb-enhanced',
+                href: 'https://github.com/onchezz/watermelondb-localfirst',
               },
             ],
           },

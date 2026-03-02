@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OWNER="${1:-onchezz}"
-REPO="${2:-watermelondb-enhanced}"
+REPO="${2:-watermelondb-localfirst}"
 VISIBILITY="${3:-public}" # public|private
 
 if [[ "$VISIBILITY" != "public" && "$VISIBILITY" != "private" ]]; then
