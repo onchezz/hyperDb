@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs_website=self.webpackChunkdocs_website||[]).push([[1431],{4520:e=>{e.exports=JSON.parse('{"authors":[{"name":"Radek Pietruszewski","title":"Maintainer of WatermelonDB","url":"https://github.com/radex","imageURL":"https://avatars.githubusercontent.com/u/183747?v=4","key":"radex","page":null,"count":1}]}')}}]);

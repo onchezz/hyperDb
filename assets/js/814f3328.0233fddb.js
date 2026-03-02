@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs_website=self.webpackChunkdocs_website||[]).push([[7472],{5513:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"MDX Blog Post","permalink":"/watermelondb-enhanced/blog/mdx-blog-post","unlisted":false,"date":"2021-08-01T00:00:00.000Z"}]}')}}]);
