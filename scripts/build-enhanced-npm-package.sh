@@ -3,15 +3,16 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PUBLISH_DIR="${PUBLISH_DIR:-$ROOT_DIR/.npm-package}"
+NPM_CACHE_DIR="${NPM_CACHE_DIR:-$ROOT_DIR/.npm-cache}"
 PACKAGE_SCOPE="${PACKAGE_SCOPE:-@onchezz}"
-PACKAGE_BASENAME="${PACKAGE_BASENAME:-watermelondb-localfirst}"
+PACKAGE_BASENAME="${PACKAGE_BASENAME:-hyperdb}"
 PACKAGE_NAME="${PACKAGE_NAME:-$PACKAGE_SCOPE/$PACKAGE_BASENAME}"
-PACKAGE_REPOSITORY_URL="${PACKAGE_REPOSITORY_URL:-https://github.com/onchezz/watermelondb-localfirst.git}"
-PACKAGE_HOMEPAGE="${PACKAGE_HOMEPAGE:-https://github.com/onchezz/watermelondb-localfirst#readme}"
-PACKAGE_BUGS_URL="${PACKAGE_BUGS_URL:-https://github.com/onchezz/watermelondb-localfirst/issues}"
+PACKAGE_REPOSITORY_URL="${PACKAGE_REPOSITORY_URL:-https://github.com/onchezz/hyperDb.git}"
+PACKAGE_HOMEPAGE="${PACKAGE_HOMEPAGE:-https://github.com/onchezz/hyperDb#readme}"
+PACKAGE_BUGS_URL="${PACKAGE_BUGS_URL:-https://github.com/onchezz/hyperDb/issues}"
 
 if [[ "${PACKAGE_NAME}" != @*/* ]]; then
-  echo "PACKAGE_NAME must be scoped (example: @onchezz/watermelondb-localfirst)"
+  echo "PACKAGE_NAME must be scoped (example: @onchezz/hyperdb)"
   exit 1
 fi
 
@@ -57,7 +58,7 @@ NODE
 
 echo "[4/5] Packing tarball"
 cd "$PUBLISH_DIR"
-TARBALL_NAME="$(npm pack --silent)"
+TARBALL_NAME="$(npm pack --silent --cache "$NPM_CACHE_DIR")"
 
 echo "[5/5] Completed"
 echo "Packaged: $PUBLISH_DIR/$TARBALL_NAME"

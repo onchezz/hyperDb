@@ -25,19 +25,19 @@ Use either method:
 From repo root:
 
 ```bash
-gh repo create onchezz/watermelondb-localfirst --private --source=. --remote=origin --push
+gh repo create onchezz/hyperDb --private --source=. --remote=origin --push
 ```
 
 Or use the included helper script:
 
 ```bash
-./scripts/publish-enhanced-repo.sh onchezz watermelondb-localfirst private
+./scripts/publish-enhanced-repo.sh onchezz hyperDb private
 ```
 
 If repository already exists:
 
 ```bash
-git remote set-url origin git@github.com:onchezz/watermelondb-localfirst.git
+git remote set-url origin git@github.com:onchezz/hyperDb.git
 git push -u origin codex/enhancement-bootstrap
 ```
 

@@ -3,6 +3,7 @@
 .cache/
 node_modules/
 .tmp/
+.npm-cache/
 
 npm-debug.log
 yarn-error.log

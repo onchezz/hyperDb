@@ -48,5 +48,5 @@ npx expo start --dev-client -c
 
 ## Repository and docs
 
-- Source: [GitHub repository](https://github.com/onchezz/watermelondb-localfirst)
-- This docs site: [GitHub Pages](https://onchezz.github.io/watermelondb-localfirst/)
+- Source: [GitHub repository](https://github.com/onchezz/hyperDb)
+- This docs site: [GitHub Pages](https://onchezz.github.io/hyperDb/)

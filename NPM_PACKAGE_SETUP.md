@@ -2,7 +2,7 @@
 
 This guide is the full setup for this fork in three modes:
 
-1. Install from a published npm package (`@onchezz/watermelondb-localfirst`)
+1. Install from a published npm package (`@onchezz/hyperdb`)
 2. Install from a local tarball for development
 3. Build and publish your own package version from this repo
 
@@ -16,15 +16,15 @@ This guide is the full setup for this fork in three modes:
 ## 2) Install in app from npm (recommended when published)
 
 ```bash
-npm install @onchezz/watermelondb-localfirst
+npm install @onchezz/hyperdb
 ```
 
 Use same imports as the original package:
 
 ```ts
-import { Database, createReactiveClient } from '@onchezz/watermelondb-localfirst'
-import SQLiteAdapter from '@onchezz/watermelondb-localfirst/adapters/sqlite'
-import { useReactiveQuery } from '@onchezz/watermelondb-localfirst/reactive/react'
+import { Database, createReactiveClient } from '@onchezz/hyperdb'
+import SQLiteAdapter from '@onchezz/hyperdb/adapters/sqlite'
+import { useReactiveQuery } from '@onchezz/hyperdb/reactive/react'
 ```
 
 ## 3) Install from local tarball (recommended while developing the fork)
@@ -57,13 +57,13 @@ Output directory:
 
 Generated package defaults:
 
-- name: `@onchezz/watermelondb-localfirst`
+- name: `@onchezz/hyperdb`
 - version: `<base-version>.enhanced.0` (or `<base-version>-enhanced.0`)
 
 Override package metadata:
 
 ```bash
-PACKAGE_NAME=@your-scope/watermelondb-localfirst npm run build:enhanced:npm
+PACKAGE_NAME=@your-scope/hyperdb npm run build:enhanced:npm
 ENHANCED_VERSION=0.28.1-enhanced.2 npm run build:enhanced:npm
 ```
 
@@ -93,7 +93,7 @@ NPM_TAG=next npm run publish:enhanced:npm
 In Expo project:
 
 ```bash
-npm install @onchezz/watermelondb-localfirst
+npm install @onchezz/hyperdb
 npx expo run:android
 # or
 npx expo run:ios
@@ -101,17 +101,17 @@ npx expo run:ios
 
 Use package entrypoints only:
 
-- `@onchezz/watermelondb-localfirst`
-- `@onchezz/watermelondb-localfirst/adapters/sqlite`
-- `@onchezz/watermelondb-localfirst/reactive/react`
+- `@onchezz/hyperdb`
+- `@onchezz/hyperdb/adapters/sqlite`
+- `@onchezz/hyperdb/reactive/react`
 
 Do not import internal `src/...` paths.
 
 ## 7) Reactive usage example
 
 ```tsx
-import { createReactiveClient } from '@onchezz/watermelondb-localfirst'
-import { useReactiveQuery } from '@onchezz/watermelondb-localfirst/reactive/react'
+import { createReactiveClient } from '@onchezz/hyperdb'
+import { useReactiveQuery } from '@onchezz/hyperdb/reactive/react'
 
 const reactive = createReactiveClient(database)
 

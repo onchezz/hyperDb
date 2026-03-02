@@ -29,7 +29,7 @@
 | ⚡️ | **Launch your app instantly** no matter how much data you have |
 | 📈 | **Highly scalable** from hundreds to tens of thousands of records |
 | 😎 | **Lazy loaded**. Only load data when you need it |
-| 🔄 | **Offline-first.** [Sync](https://onchezz.github.io/watermelondb-localfirst/docs/Sync/Intro) with your own backend |
+| 🔄 | **Offline-first.** [Sync](https://onchezz.github.io/hyperDb/docs/Sync/Intro) with your own backend |
 | 📱 | **Multiplatform**. iOS, Android, Windows, web, and Node.js |
 | ⚛️ | **Optimized for React.** Easily plug data into components |
 | 🧰 | **Framework-agnostic.** Use JS API to plug into other UI frameworks |
@@ -49,10 +49,10 @@ This fork includes additional capabilities on top of upstream WatermelonDB:
 
 Documentation:
 
-- [Enhanced fork reference](https://github.com/onchezz/watermelondb-localfirst/blob/codex/enhancement-bootstrap/ENHANCED_DB_DOCUMENTATION.md)
-- [Installation + npm packaging guide](https://github.com/onchezz/watermelondb-localfirst/blob/codex/enhancement-bootstrap/NPM_PACKAGE_SETUP.md)
-- [Reactive client docs](https://onchezz.github.io/watermelondb-localfirst/docs/Reactive)
-- [Peer sync docs](https://onchezz.github.io/watermelondb-localfirst/docs/Sync/PeerToPeer)
+- [Enhanced fork reference](https://github.com/onchezz/hyperDb/blob/codex/enhancement-bootstrap/ENHANCED_DB_DOCUMENTATION.md)
+- [Installation + npm packaging guide](https://github.com/onchezz/hyperDb/blob/codex/enhancement-bootstrap/NPM_PACKAGE_SETUP.md)
+- [Reactive client docs](https://onchezz.github.io/hyperDb/docs/Reactive)
+- [Peer sync docs](https://onchezz.github.io/hyperDb/docs/Sync/PeerToPeer)
 
 ## Why Watermelon?
 
@@ -126,7 +126,7 @@ const enhance = withObservables(['post'], ({ post }) => ({
 
 The result is fully reactive! Whenever a post or comment is added, changed, or removed, the right components **will automatically re-render** on screen. Doesn't matter if a change occurred in a totally different part of the app, it all just works out of the box!
 
-### ➡️ **Learn more:** [see full documentation](https://onchezz.github.io/watermelondb-localfirst/docs)
+### ➡️ **Learn more:** [see full documentation](https://onchezz.github.io/hyperDb/docs)
 
 ## Who uses WatermelonDB
 

@@ -14,15 +14,15 @@ This page covers full setup for the enhanced fork with Expo/React Native and npm
 Install the fork package under your scope:
 
 ```bash
-npm install @onchezz/watermelondb-localfirst
+npm install @onchezz/hyperdb
 ```
 
 Use imports from the scoped package:
 
 ```ts
-import { Database, createReactiveClient } from '@onchezz/watermelondb-localfirst'
-import SQLiteAdapter from '@onchezz/watermelondb-localfirst/adapters/sqlite'
-import { useReactiveQuery } from '@onchezz/watermelondb-localfirst/reactive/react'
+import { Database, createReactiveClient } from '@onchezz/hyperdb'
+import SQLiteAdapter from '@onchezz/hyperdb/adapters/sqlite'
+import { useReactiveQuery } from '@onchezz/hyperdb/reactive/react'
 ```
 
 ### Option B: Local tarball from fork
@@ -51,17 +51,17 @@ npm run build:enhanced:npm
 
 Output:
 
-- `.npm-package/onchezz-watermelondb-localfirst-<version>.tgz`
+- `.npm-package/onchezz-hyperdb-<version>.tgz`
 
 Defaults:
 
-- package name: `@onchezz/watermelondb-localfirst`
+- package name: `@onchezz/hyperdb`
 - version suffix: `.enhanced.0`
 
 Override values:
 
 ```bash
-PACKAGE_NAME=@your-scope/watermelondb-localfirst npm run build:enhanced:npm
+PACKAGE_NAME=@your-scope/hyperdb npm run build:enhanced:npm
 ENHANCED_VERSION=0.28.1-enhanced.2 npm run build:enhanced:npm
 ```
 
@@ -82,7 +82,7 @@ NPM_TAG=next npm run publish:enhanced:npm
 ## Expo native setup
 
 ```bash
-npm install @onchezz/watermelondb-localfirst
+npm install @onchezz/hyperdb
 npx expo run:android
 # or
 npx expo run:ios
@@ -90,9 +90,9 @@ npx expo run:ios
 
 Use package entrypoints only:
 
-- `@onchezz/watermelondb-localfirst`
-- `@onchezz/watermelondb-localfirst/adapters/sqlite`
-- `@onchezz/watermelondb-localfirst/reactive/react`
+- `@onchezz/hyperdb`
+- `@onchezz/hyperdb/adapters/sqlite`
+- `@onchezz/hyperdb/reactive/react`
 
 Avoid internal `src/...` imports.
 

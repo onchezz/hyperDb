@@ -176,17 +176,17 @@ Why tarball install:
 This machine currently has no GitHub auth configured. Once authenticated:
 
 1. `gh auth login`
-2. `gh repo create <owner>/watermelondb-localfirst --private --source=. --remote=origin --push`
+2. `gh repo create <owner>/hyperDb --private --source=. --remote=origin --push`
 
 Scripted option:
 
 1. `gh auth login`
-2. `./scripts/publish-enhanced-repo.sh <owner> watermelondb-localfirst private`
+2. `./scripts/publish-enhanced-repo.sh <owner> hyperDb private`
 
 Alternative (manual):
 
 1. Create repo in GitHub UI.
-2. `git remote set-url origin git@github.com:<owner>/watermelondb-localfirst.git`
+2. `git remote set-url origin git@github.com:<owner>/hyperDb.git`
 3. `git push -u origin codex/enhancement-bootstrap`
 
 ## Documentation index
