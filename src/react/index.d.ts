@@ -5,4 +5,5 @@ export { default as useDatabase } from './useDatabase'
 // export { default as withHooks } from './withHooks' // TODO: Add TS types
 export { default as compose } from './compose'
 export { default as withObservables, ExtractedObservables } from './withObservables'
+export { useReactiveQuery, useReactiveSingle, ReactiveQuery, ReactiveHookState } from '../reactive/react'
 // export { default as WithObservables } from './WithObservablesComponent' // TODO: Add TS types
