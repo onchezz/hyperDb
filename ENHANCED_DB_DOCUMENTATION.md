@@ -178,6 +178,11 @@ This machine currently has no GitHub auth configured. Once authenticated:
 1. `gh auth login`
 2. `gh repo create <owner>/watermelondb-enhanced --private --source=. --remote=origin --push`
 
+Scripted option:
+
+1. `gh auth login`
+2. `./scripts/publish-enhanced-repo.sh <owner> watermelondb-enhanced private`
+
 Alternative (manual):
 
 1. Create repo in GitHub UI.

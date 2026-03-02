@@ -28,6 +28,12 @@ From repo root:
 gh repo create onchezz/watermelondb-enhanced --private --source=. --remote=origin --push
 ```
 
+Or use the included helper script:
+
+```bash
+./scripts/publish-enhanced-repo.sh onchezz watermelondb-enhanced private
+```
+
 If repository already exists:
 
 ```bash
