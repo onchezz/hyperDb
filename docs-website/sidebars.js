@@ -16,6 +16,7 @@ const sidebars = {
   docs: {
     About: [
       'docs/README',
+      'docs/EnhancedFork',
       // 'docs/Why',
       // 'docs/WhoUses',
       // 'docs/Example',

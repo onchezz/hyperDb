@@ -13,15 +13,15 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://watermelondb.dev',
+  url: 'https://onchezz.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/',
+  baseUrl: '/watermelondb-enhanced/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'Nozbe', // Usually your GitHub org/user name.
-  projectName: 'WatermelonDB', // Usually your repo name.
+  organizationName: 'onchezz', // Usually your GitHub org/user name.
+  projectName: 'watermelondb-enhanced', // Usually your repo name.
 
   trailingSlash: false,
 
@@ -45,7 +45,8 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: 'https://github.com/nozbe/WatermelonDB/edit/master/docs-website/',
+          editUrl:
+            'https://github.com/onchezz/watermelondb-enhanced/edit/codex/enhancement-bootstrap/docs-website/',
           routeBasePath: '/',
           path: 'docs',
           lastVersion: 'current',
@@ -94,7 +95,7 @@ const config = {
           },
           // {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/nozbe/WatermelonDB',
+            href: 'https://github.com/onchezz/watermelondb-enhanced',
             label: 'GitHub',
             position: 'right',
           },
@@ -146,7 +147,7 @@ const config = {
               // },
               {
                 label: 'GitHub',
-                href: 'https://github.com/nozbe/WatermelonDB',
+                href: 'https://github.com/onchezz/watermelondb-enhanced',
               },
             ],
           },

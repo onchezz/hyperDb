@@ -29,7 +29,7 @@
 | ⚡️ | **Launch your app instantly** no matter how much data you have |
 | 📈 | **Highly scalable** from hundreds to tens of thousands of records |
 | 😎 | **Lazy loaded**. Only load data when you need it |
-| 🔄 | **Offline-first.** [Sync](https://watermelondb.dev/docs/Sync/Intro) with your own backend |
+| 🔄 | **Offline-first.** [Sync](https://onchezz.github.io/watermelondb-enhanced/docs/Sync/Intro) with your own backend |
 | 📱 | **Multiplatform**. iOS, Android, Windows, web, and Node.js |
 | ⚛️ | **Optimized for React.** Easily plug data into components |
 | 🧰 | **Framework-agnostic.** Use JS API to plug into other UI frameworks |
@@ -49,9 +49,9 @@ This fork includes additional capabilities on top of upstream WatermelonDB:
 
 Documentation:
 
-- [Enhanced fork reference](./ENHANCED_DB_DOCUMENTATION.md)
-- [Reactive client docs](./docs-website/docs/docs/Reactive.md)
-- [Peer sync docs](./docs-website/docs/docs/Sync/PeerToPeer.md)
+- [Enhanced fork reference](https://github.com/onchezz/watermelondb-enhanced/blob/codex/enhancement-bootstrap/ENHANCED_DB_DOCUMENTATION.md)
+- [Reactive client docs](https://onchezz.github.io/watermelondb-enhanced/docs/Reactive)
+- [Peer sync docs](https://onchezz.github.io/watermelondb-enhanced/docs/Sync/PeerToPeer)
 
 ## Why Watermelon?
 
@@ -125,7 +125,7 @@ const enhance = withObservables(['post'], ({ post }) => ({
 
 The result is fully reactive! Whenever a post or comment is added, changed, or removed, the right components **will automatically re-render** on screen. Doesn't matter if a change occurred in a totally different part of the app, it all just works out of the box!
 
-### ➡️ **Learn more:** [see full documentation](https://nozbe.github.io/WatermelonDB/)
+### ➡️ **Learn more:** [see full documentation](https://onchezz.github.io/watermelondb-enhanced/docs)
 
 ## Who uses WatermelonDB
 

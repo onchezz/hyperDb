@@ -34,7 +34,7 @@ hide_title: true
 | ⚡️ | **Launch your app instantly** no matter how much data you have |
 | 📈 | **Highly scalable** from hundreds to tens of thousands of records |
 | 😎 | **Lazy loaded**. Only load data when you need it |
-| 🔄 | **Offline-first.** [Sync](https://watermelondb.dev/docs/Sync/Intro) with your own backend |
+| 🔄 | **Offline-first.** [Sync](https://onchezz.github.io/watermelondb-enhanced/docs/Sync/Intro) with your own backend |
 | 📱 | **Multiplatform**. iOS, Android, Windows, web, and Node.js |
 | ⚛️ | **Optimized for React.** Easily plug data into components |
 | 🧰 | **Framework-agnostic.** Use JS API to plug into other UI frameworks |
@@ -46,16 +46,17 @@ hide_title: true
 
 ## Enhanced fork additions
 
-This fork includes:
+This fork includes additional capabilities on top of upstream WatermelonDB:
 
-1. Supabase-style reactive query API (`createReactiveClient`)
-2. React helpers (`useReactiveQuery`, `useReactiveSingle`, `ReactiveQuery`)
-3. Secure peer-to-peer sync transport primitives
+1. Supabase-style reactive query client (`createReactiveClient`)
+2. React reactive hooks/components (`useReactiveQuery`, `useReactiveSingle`, `ReactiveQuery`)
+3. Secure peer-to-peer sync transport layer for WebRTC/Bluetooth/LAN adapters
 
-See:
+Documentation:
 
-- [Reactive client](./Reactive.md)
-- [Peer-to-peer sync](./Sync/PeerToPeer.md)
+- [Enhanced fork reference](https://github.com/onchezz/watermelondb-enhanced/blob/codex/enhancement-bootstrap/ENHANCED_DB_DOCUMENTATION.md)
+- [Reactive client docs](https://onchezz.github.io/watermelondb-enhanced/docs/Reactive)
+- [Peer sync docs](https://onchezz.github.io/watermelondb-enhanced/docs/Sync/PeerToPeer)
 
 ## Why Watermelon?
 
@@ -129,7 +130,7 @@ const enhance = withObservables(['post'], ({ post }) => ({
 
 The result is fully reactive! Whenever a post or comment is added, changed, or removed, the right components **will automatically re-render** on screen. Doesn't matter if a change occurred in a totally different part of the app, it all just works out of the box!
 
-### ➡️ **Learn more:** [see full documentation](https://nozbe.github.io/WatermelonDB/)
+### ➡️ **Learn more:** [see full documentation](https://onchezz.github.io/watermelondb-enhanced/docs)
 
 ## Who uses WatermelonDB
 
@@ -213,6 +214,12 @@ The result is fully reactive! Whenever a post or comment is added, changed, or r
 
   <a href="https://learnthewords.app/">
     <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/learn-the-words.png" alt="Learn The Words" width="300" />
+  </a>
+
+  <br/>
+
+  <a href="https://ezypack.app/">
+    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/ezypack.png" alt="ezypack" width="300" />
   </a>
 
   <br/>
