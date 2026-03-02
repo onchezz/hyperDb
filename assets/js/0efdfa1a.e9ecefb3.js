@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs_website=self.webpackChunkdocs_website||[]).push([[2629],{9928:s=>{s.exports=JSON.parse('{"tags":[{"label":"docusaurus","permalink":"/watermelondb-localfirst/blog/tags/docusaurus","count":1}]}')}}]);
