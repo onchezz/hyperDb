@@ -1,52 +1,49 @@
 ---
-title: Enhanced Fork
-hide_title: true
+title: HyperDB Project Identity
+hide_title: false
 ---
 
-# Enhanced fork guide
+# HyperDB Project Identity
 
-This repository is an enhanced fork of WatermelonDB with additional capabilities for reactive access and peer-to-peer synchronization.
+HyperDB is the enhanced distribution and docs identity for this repository.
 
-## What was added
+It is implemented on top of WatermelonDB and keeps WatermelonDB core semantics while adding:
 
-1. Supabase-style reactive client API (`createReactiveClient`).
-2. React reactive wrappers (`useReactiveQuery`, `useReactiveSingle`, `ReactiveQuery`).
-3. Secure peer-sync transport layer for local channels (WebRTC/Bluetooth/LAN).
-4. Improved TypeScript ergonomics around readonly-array query helper types.
+1. Supabase-style local query ergonomics
+2. React convenience wrappers for reactive reads
+3. Peer sync transport primitives with explicit security hooks
 
-## Core docs
+## Naming
 
-- [Reactive client](./Reactive.md)
-- [Peer-to-peer sync](./Sync/PeerToPeer.md)
-- [Sync frontend](./Sync/Frontend.md)
+Current project naming used in docs and package outputs:
 
-## Quick install in app projects
+- Repository/docs identity: `hyperDb`
+- npm package identity: `@onchezz/hyperdb`
 
-For Expo/React Native app consumption, use the built package artifact from this fork:
+## Why keep WatermelonDB underneath
 
-```bash
-cd watermelondb
-npm run build
-cd dist && npm pack
+WatermelonDB already provides:
 
-# in your app
-npm install ../watermelondb/dist/nozbe-watermelondb-0.28.1-0.tgz
-```
+- Strong local-first performance characteristics
+- Mature model/schema/migration primitives
+- SQLite-backed query execution and observable update graph
 
-## Native Expo (development build)
+HyperDB focuses on developer experience and integration workflows, not replacing the core engine.
 
-```bash
-npx expo run:android
-npx expo start --dev-client -c
-```
+## Migration guidance
 
-## Security notes for peer sync
+If your app previously imported `@nozbe/watermelondb`, plan a controlled migration:
 
-1. Provide a secure codec (`encode` + `decode`) for message encryption/authentication.
-2. Use `authorize()` on server side.
-3. Keep `unsafeAllowUnencryptedMessages` disabled in production.
+1. Install `@onchezz/hyperdb`
+2. Switch imports to HyperDB package entrypoints
+3. Keep existing schema/model definitions (compatible)
+4. Adopt `createReactiveClient` and hooks where useful
+5. Rebuild native app for Expo/React Native after dependency switch
 
-## Repository and docs
+## Related docs
 
-- Source: [GitHub repository](https://github.com/onchezz/hyperDb)
-- This docs site: [GitHub Pages](https://onchezz.github.io/hyperDb/)
+- [Overview](./HyperDB/Overview.md)
+- [Local-First API](./HyperDB/LocalFirstApi.md)
+- [React Integration](./HyperDB/ReactIntegration.md)
+- [Expo Setup](./HyperDB/ExpoSetup.md)
+- [Publishing](./HyperDB/Publishing.md)

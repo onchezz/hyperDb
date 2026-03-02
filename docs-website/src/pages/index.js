@@ -1,7 +1,5 @@
 import Link from '@docusaurus/Link'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
-import HomepageFeatures from '@site/src/components/HomepageFeatures'
-import { Redirect } from '@docusaurus/router'
 import Layout from '@theme/Layout'
 import clsx from 'clsx'
 import React from 'react'
@@ -16,7 +14,7 @@ function HomepageHeader() {
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/docs/">
+          <Link className="button button--secondary button--lg" to="/HyperDB/Overview">
             Get Started
           </Link>
         </div>
@@ -26,15 +24,23 @@ function HomepageHeader() {
 }
 
 export default function Home() {
-  // TODO: Build actual home page
-  return <Redirect to="/docs" />
-  // return (
-  //   <Layout
-  //     description="WatermelonDB is a performant, scalable, and easy-to-use database for React and React Native apps.">
-  //     <HomepageHeader />
-  //     <main>
-  //       <HomepageFeatures />
-  //     </main>
-  //   </Layout>
-  // )
+  return (
+    <Layout description="HyperDB is a local-first reactive data layer built on top of WatermelonDB.">
+      <HomepageHeader />
+      <main className="container margin-vert--lg">
+        <p>
+          HyperDB extends WatermelonDB with a Supabase-style local query client, React-first reactive hooks, and
+          secure peer sync transport primitives for LAN/WebRTC/Bluetooth channel implementations.
+        </p>
+        <div className={styles.buttons}>
+          <Link className="button button--primary button--lg margin-right--sm" to="/HyperDB/Overview">
+            Read HyperDB Overview
+          </Link>
+          <Link className="button button--secondary button--lg" to="/EnhancedInstall">
+            Install & Publish
+          </Link>
+        </div>
+      </main>
+    </Layout>
+  )
 }

@@ -8,8 +8,8 @@ const { version } = require('./package.json')
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'WatermelonDB',
-  tagline: 'A reactive database framework',
+  title: 'HyperDB',
+  tagline: 'A local-first reactive data layer built on top of WatermelonDB',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -23,7 +23,7 @@ const config = {
   organizationName: 'onchezz', // Usually your GitHub org/user name.
   projectName: 'hyperDb', // Usually your repo name.
 
-  trailingSlash: false,
+  trailingSlash: true,
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -48,7 +48,7 @@ const config = {
           editUrl:
             'https://github.com/onchezz/hyperDb/edit/codex/enhancement-bootstrap/docs-website/',
           routeBasePath: '/',
-          path: 'docs',
+          path: 'docs/docs',
           lastVersion: 'current',
           versions: {
             current: {
@@ -77,7 +77,7 @@ const config = {
       // Replace with your project's social card
       image: 'img/watermelon-social-card.png',
       navbar: {
-        title: 'WatermelonDB',
+        title: 'HyperDB',
         logo: {
           alt: 'WatermelonDB Logo',
           src: 'img/logo.svg',
@@ -87,7 +87,7 @@ const config = {
             type: 'doc',
             position: 'left',
             label: 'Docs',
-            docId: 'docs/README',
+            docId: 'HyperDB/Overview',
           },
           {
             type: 'docsVersionDropdown',
@@ -108,8 +108,8 @@ const config = {
             title: 'Docs',
             items: [
               {
-                label: 'Installation',
-                to: '/docs/Installation',
+                label: 'HyperDB Overview',
+                to: '/HyperDB/Overview',
               },
               // {
               //   label: 'Advanced Guides',
@@ -117,7 +117,7 @@ const config = {
               // },
               {
                 label: 'Contributing',
-                to: '/docs/CONTRIBUTING',
+                to: '/CONTRIBUTING',
               },
             ],
           },
@@ -152,7 +152,7 @@ const config = {
             ],
           },
         ],
-        copyright: `WatermelonDB by <a href="https://radex.io">Radek Pietruszewski</a> and <a href="https://nozbe.com">Nozbe</a>.`,
+        copyright: `HyperDB docs and integration layer built on top of WatermelonDB by <a href="https://radex.io">Radek Pietruszewski</a> and <a href="https://nozbe.com">Nozbe</a>.`,
       },
       prism: {
         theme: lightTheme,

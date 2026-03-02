@@ -1,245 +1,214 @@
-<p align="center">
-  <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/logo-horizontal2.png" alt="WatermelonDB" width="539" />
-</p>
+# HyperDB
 
-<h4 align="center">
-  A reactive database framework
-</h4>
+HyperDB is a **local-first reactive database layer** built on top of **WatermelonDB**.
 
-<p align="center">
-  Build powerful React and React Native apps that scale from hundreds to tens of thousands of records and remain <em>fast</em> ⚡️
-</p>
+It keeps WatermelonDB's storage/query performance model and adds:
 
-<p align="center">
-  <a href="https://github.com/Nozbe/WatermelonDB/blob/master/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"/>
-  </a>
+1. Supabase-style local query chaining (`createReactiveClient`)
+2. React-first reactive hooks (`useReactiveQuery`, `useReactiveSingle`, `ReactiveQuery`)
+3. Peer-to-peer sync primitives for secure LAN/WebRTC/Bluetooth transport implementations
 
-  <a href="https://www.npmjs.com/package/@nozbe/watermelondb">
-    <img src="https://img.shields.io/npm/v/@nozbe/watermelondb.svg" alt="npm"/>
-  </a>
+## Foundation and compatibility
 
-  <a href="https://gurubase.io/g/watermelondb">
-    <img src="https://img.shields.io/badge/Gurubase-Ask%20WatermelonDB%20Guru-006BFF" alt="Gurubase"/>
-  </a>
-</p>
+HyperDB is not a replacement database engine.
 
-|   | WatermelonDB |
-| - | ------------ |
-| ⚡️ | **Launch your app instantly** no matter how much data you have |
-| 📈 | **Highly scalable** from hundreds to tens of thousands of records |
-| 😎 | **Lazy loaded**. Only load data when you need it |
-| 🔄 | **Offline-first.** [Sync](https://onchezz.github.io/hyperDb/docs/Sync/Intro) with your own backend |
-| 📱 | **Multiplatform**. iOS, Android, Windows, web, and Node.js |
-| ⚛️ | **Optimized for React.** Easily plug data into components |
-| 🧰 | **Framework-agnostic.** Use JS API to plug into other UI frameworks |
-| ⏱ | **Fast.** And getting faster with every release! |
-| ✅ | **Proven.** Powers [Nozbe](https://nozbe.com/teams) since 2017 (and [many others](#who-uses-watermelondb)) |
-| ✨ | **Reactive.** (Optional) [RxJS](https://github.com/ReactiveX/rxjs) API |
-| 🔗 | **Relational.** Built on rock-solid [SQLite](https://www.sqlite.org) foundation |
-| ⚠️ | **Static typing** with [Flow](https://flow.org) or [TypeScript](https://typescriptlang.org) |
+- Storage + adapters: WatermelonDB (`SQLiteAdapter`, `LokiJSAdapter`)
+- Query execution + observability: WatermelonDB
+- Schema/model/migration semantics: WatermelonDB-compatible
 
-## Enhanced fork additions
+If you already use WatermelonDB models and migrations, you can adopt HyperDB incrementally.
 
-This fork includes additional capabilities on top of upstream WatermelonDB:
+## Package identity
 
-1. Supabase-style reactive query client (`createReactiveClient`)
-2. React reactive hooks/components (`useReactiveQuery`, `useReactiveSingle`, `ReactiveQuery`)
-3. Secure peer-to-peer sync transport layer for WebRTC/Bluetooth/LAN adapters
+- Repository: `onchezz/hyperDb`
+- Docs site: [https://onchezz.github.io/hyperDb/](https://onchezz.github.io/hyperDb/)
+- Enhanced package (consumer target): `@onchezz/hyperdb`
 
-Documentation:
+## Quick install
 
-- [Enhanced fork reference](https://github.com/onchezz/hyperDb/blob/codex/enhancement-bootstrap/ENHANCED_DB_DOCUMENTATION.md)
-- [Installation + npm packaging guide](https://github.com/onchezz/hyperDb/blob/codex/enhancement-bootstrap/NPM_PACKAGE_SETUP.md)
-- [Reactive client docs](https://onchezz.github.io/hyperDb/docs/Reactive)
-- [Peer sync docs](https://onchezz.github.io/hyperDb/docs/Sync/PeerToPeer)
+### npm
 
-## Why Watermelon?
+```bash
+npm install @onchezz/hyperdb
+```
 
-**WatermelonDB** is a new way of dealing with user data in React Native and React web apps.
+### Expo native (dev build)
 
-It's optimized for building **complex applications** in React Native, and the number one goal is **real-world performance**. In simple words, _your app must launch fast_.
+```bash
+npx expo run:android
+# or
+npx expo run:ios
+```
 
-For simple apps, using Redux or MobX with a persistence adapter is the easiest way to go. But when you start scaling to thousands or tens of thousands of database records, your app will now be slow to launch (especially on slower Android devices). Loading a full database into JavaScript is expensive!
+Use native build workflow (not plain Expo Go) for SQLite-native integration.
 
-Watermelon fixes it **by being lazy**. Nothing is loaded until it's requested. And since all querying is performed directly on the rock-solid [SQLite database](https://www.sqlite.org/index.html) on a separate native thread, most queries resolve in an instant.
+## Core imports
 
-But unlike using SQLite directly, Watermelon is **fully observable**. So whenever you change a record, all UI that depends on it will automatically re-render. For example, completing a task in a to-do app will re-render the task component, the list (to reorder), and all relevant task counters. [**Learn more**](https://www.youtube.com/watch?v=UlZ1QnFF4Cw).
+```ts
+import { Database, createReactiveClient } from '@onchezz/hyperdb'
+import SQLiteAdapter from '@onchezz/hyperdb/adapters/sqlite'
+import { useReactiveQuery } from '@onchezz/hyperdb/reactive/react'
+import { createPeerSyncClient, startPeerSyncServer } from '@onchezz/hyperdb/sync'
+```
 
-| <a href="https://www.youtube.com/watch?v=UlZ1QnFF4Cw"><img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/watermelon-talk-thumbnail.jpg" alt="React Native EU: Next-generation React Databases" width="300" /></a> |
-| ---- |
-| <p align="center"><a href="https://www.youtube.com/watch?v=UlZ1QnFF4Cw">📺 <strong>Next-generation React databases</strong><br/>(a talk about WatermelonDB)</a></p> |
+## End-to-end example
 
-## Usage
+### 1. Define schema
 
-**Quick (over-simplified) example:** an app with posts and comments.
+```ts
+import { appSchema, tableSchema } from '@onchezz/hyperdb'
 
-First, you define Models:
+export const schema = appSchema({
+  version: 1,
+  tables: [
+    tableSchema({
+      name: 'tasks',
+      columns: [
+        { name: 'name', type: 'string' },
+        { name: 'is_done', type: 'boolean' },
+        { name: 'project_id', type: 'string', isIndexed: true },
+        { name: 'position', type: 'number' },
+        { name: 'created_at', type: 'number' },
+      ],
+    }),
+  ],
+})
+```
 
-```js
-class Post extends Model {
-  @field('name') name
-  @field('body') body
-  @children('comments') comments
+### 2. Initialize DB
+
+```ts
+import { Database } from '@onchezz/hyperdb'
+import SQLiteAdapter from '@onchezz/hyperdb/adapters/sqlite'
+
+const adapter = new SQLiteAdapter({
+  schema,
+  dbName: 'hyper_db',
+  jsi: true,
+  onSetUpError: (error) => console.error(error),
+})
+
+export const database = new Database({
+  adapter,
+  modelClasses: [Task],
+})
+```
+
+### 3. Create reactive client
+
+```ts
+import { createReactiveClient } from '@onchezz/hyperdb'
+
+export const reactive = createReactiveClient(database)
+```
+
+### 4. Query and mutate with chain API
+
+```ts
+const list = await reactive
+  .from('tasks')
+  .eq('project_id', projectId)
+  .order('position', { ascending: true })
+  .fetch()
+
+if (list.error) throw list.error
+
+await reactive
+  .from('tasks')
+  .eq('id', taskId)
+  .update({ is_done: true })
+```
+
+### 5. Make component reactive without manual `useEffect` subscription
+
+```tsx
+import { useReactiveQuery } from '@onchezz/hyperdb/reactive/react'
+
+function TaskList({ projectId }: { projectId: string }) {
+  const { data: tasks, isLoading, error } = useReactiveQuery(
+    () => reactive.from('tasks').eq('project_id', projectId).order('position', { ascending: true }),
+    [projectId],
+  )
+
+  if (isLoading) return null
+  if (error) return <Text>{error.message}</Text>
+
+  return (
+    <View>
+      {(tasks ?? []).map((task) => (
+        <Text key={task.id}>{task.name}</Text>
+      ))}
+    </View>
+  )
 }
+```
 
-class Comment extends Model {
-  @field('body') body
-  @field('author') author
+## HyperDB API surface
+
+### Query builder
+
+- `from(table)`
+- `select(columns)`
+- `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `match`
+- `order(column, { ascending })`
+- `limit(count)`, `range(from, to)`
+
+### Read methods
+
+- `fetch()`
+- `single()`
+- `maybeSingle()`
+- `observe()`
+- `subscribe(cb)`
+
+### Write methods
+
+- `insert(payload)`
+- `update(partial)`
+- `upsert(payload, options)`
+- `delete()`
+
+Each operation returns a predictable envelope:
+
+```ts
+type ReactiveResponse<T> = {
+  data: T | null
+  error: Error | null
 }
 ```
 
-Then, you connect components to the data:
+## Peer sync model
 
-```js
-const Comment = ({ comment }) => (
-  <View style={styles.commentBox}>
-    <Text>{comment.body} — by {comment.author}</Text>
-  </View>
-)
+HyperDB exposes transport-agnostic helpers and expects app-provided transport + crypto.
 
-// This is how you make your app reactive! ✨
-const enhance = withObservables(['comment'], ({ comment }) => ({
-  comment,
-}))
-const EnhancedComment = enhance(Comment)
-```
+Use this for secure same-network device sync flows (WebRTC, Bluetooth wrappers, LAN sockets), with:
 
-And now you can render the whole Post:
+1. Authenticated encryption codec (`encode`/`decode`)
+2. Explicit peer authorization
+3. Replay mitigation and schema validation
 
-```js
-const Post = ({ post, comments }) => (
-  <View>
-    <Text>{post.name}</Text>
-    <Text>Comments:</Text>
-    {comments.map(comment =>
-      <EnhancedComment key={comment.id} comment={comment} />
-    )}
-  </View>
-)
+## Detailed docs
 
-const enhance = withObservables(['post'], ({ post }) => ({
-  post,
-  comments: post.comments
-}))
-```
+- HyperDB overview: [https://onchezz.github.io/hyperDb/HyperDB/Overview](https://onchezz.github.io/hyperDb/HyperDB/Overview)
+- Architecture: [https://onchezz.github.io/hyperDb/HyperDB/Architecture](https://onchezz.github.io/hyperDb/HyperDB/Architecture)
+- Local-first API: [https://onchezz.github.io/hyperDb/HyperDB/LocalFirstApi](https://onchezz.github.io/hyperDb/HyperDB/LocalFirstApi)
+- React integration: [https://onchezz.github.io/hyperDb/HyperDB/ReactIntegration](https://onchezz.github.io/hyperDb/HyperDB/ReactIntegration)
+- Expo setup: [https://onchezz.github.io/hyperDb/HyperDB/ExpoSetup](https://onchezz.github.io/hyperDb/HyperDB/ExpoSetup)
+- Peer sync + security: [https://onchezz.github.io/hyperDb/HyperDB/PeerSyncSecurity](https://onchezz.github.io/hyperDb/HyperDB/PeerSyncSecurity)
+- Publishing/versioning: [https://onchezz.github.io/hyperDb/HyperDB/Publishing](https://onchezz.github.io/hyperDb/HyperDB/Publishing)
+- Troubleshooting + 404 analysis: [https://onchezz.github.io/hyperDb/HyperDB/Troubleshooting](https://onchezz.github.io/hyperDb/HyperDB/Troubleshooting)
 
-The result is fully reactive! Whenever a post or comment is added, changed, or removed, the right components **will automatically re-render** on screen. Doesn't matter if a change occurred in a totally different part of the app, it all just works out of the box!
+## `Page Not Found` quick note
 
-### ➡️ **Learn more:** [see full documentation](https://onchezz.github.io/hyperDb/docs)
+If you open `https://onchezz.github.io/docs`, you will get 404 for this project.
 
-## Who uses WatermelonDB
+HyperDB docs are project pages under:
 
-  <a href="https://nozbe.com/?c=watermelon">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/nozbe.png" alt="Nozbe Teams" width="300" />
-  </a>
+- `https://onchezz.github.io/hyperDb/`
 
-  <br/>
+## License and credits
 
-  <a href="https://capmo.de">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/capmo.png" alt="CAPMO" width="300" />
-  </a>
+HyperDB enhancement work is built on top of WatermelonDB.
 
-  <br/>
-
-  <a href="https://mattermost.com/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/mattermost.png" alt="Mattermost" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://rocket.chat/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/rocketchat.png" alt="Rocket Chat" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://steady.health">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/steady.png" alt="Steady" width="150"/>
-  </a>
-
-  <br/>
-
-  <a href="https://aerobotics.com">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/aerobotics.png" alt="Aerobotics" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://smashappz.com">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/smashappz.jpg" alt="Smash Appz" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://halogo.com.au/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/halogo_logo.png" alt="HaloGo" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://sportsrecruits.com/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/sportsrecruits-logo.png" alt="SportsRecruits" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://chatable.io/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/chatable_logo.png" alt="Chatable" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://todorant.com/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/todorant-logo.png" alt="Todorant" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://blastworkout.app/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/blastworkout-logo.png" alt="Blast Workout" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://dayful.app/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/dayful.png" alt="Dayful" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://learnthewords.app/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/learn-the-words.png" alt="Learn The Words" width="300" />
-  </a>
-
-  <br/>
-
-  <a href="https://ezypack.app/">
-    <img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/apps/ezypack.png" alt="ezypack" width="300" />
-  </a>
-
-  <br/>
-
-_Does your company or app use 🍉? Open a pull request and add your logo/icon with link here!_
-
-## Contributing
-
-<img src="https://github.com/Nozbe/WatermelonDB/raw/master/assets/needyou.jpg" alt="We need you" width="220" />
-
-**WatermelonDB is an open-source project and it needs your help to thrive!**
-
-If there's a missing feature, a bug, or other improvement you'd like, we encourage you to contribute! Feel free to open an issue to get some guidance and see [Contributing guide](./CONTRIBUTING.md) for details about project setup, testing, etc.
-
-If you're just getting started, see [good first issues](https://github.com/Nozbe/WatermelonDB/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) that are easy to contribute to. If you make a non-trivial contribution, email me, and I'll send you a nice 🍉 sticker!
-
-If you make or are considering making an app using WatermelonDB, please let us know!
-
-## Author and license
-
-**WatermelonDB** was created by [@Nozbe](https://github.com/Nozbe).
-
-**WatermelonDB's** main author and maintainer is [Radek Pietruszewski](https://github.com/radex) ([website](https://radex.io) ⋅ [𝕏 (Twitter)](https://twitter.com/radexp))
-
-[See all contributors](https://github.com/Nozbe/WatermelonDB/graphs/contributors).
-
-WatermelonDB is available under the MIT license. See the [LICENSE file](https://github.com/Nozbe/WatermelonDB/LICENSE) for more info.
+WatermelonDB is MIT-licensed and authored/maintained by the Nozbe team and contributors.
+See [`LICENSE`](./LICENSE).

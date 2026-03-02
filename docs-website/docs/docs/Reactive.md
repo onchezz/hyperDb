@@ -3,9 +3,9 @@ title: Reactive Client
 hide_title: true
 ---
 
-# Reactive client API (`createReactiveClient`)
+# HyperDB reactive client API (`createReactiveClient`)
 
-WatermelonDB now exposes a Supabase-style query API for local tables.
+HyperDB exposes a Supabase-style query API for local tables.
 
 It is built on top of Watermelon collections/queries and returns:
 
@@ -14,7 +14,7 @@ It is built on top of Watermelon collections/queries and returns:
 - predictable `{ data, error }` response envelopes
 
 ```ts
-import { createReactiveClient } from '@nozbe/watermelondb'
+import { createReactiveClient } from '@onchezz/hyperdb'
 
 const reactive = createReactiveClient(database)
 ```
@@ -95,7 +95,7 @@ To keep components simple, use:
 - `ReactiveQuery`
 
 ```tsx
-import { useReactiveQuery } from '@nozbe/watermelondb/reactive/react'
+import { useReactiveQuery } from '@onchezz/hyperdb/reactive/react'
 
 function TaskList({ projectId }) {
   const { data, error, isLoading } = useReactiveQuery(
