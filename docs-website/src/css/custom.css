@@ -1,31 +1,73 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #5e983d;
-  --ifm-color-primary-dark: #558937;
-  --ifm-color-primary-darker: #508134;
-  --ifm-color-primary-darkest: #426a2b;
-  --ifm-color-primary-light: #67a743;
-  --ifm-color-primary-lighter: #6caf46;
-  --ifm-color-primary-lightest: #7dbc59;
+  --ifm-font-family-base: 'Space Grotesk', 'Avenir Next', 'Segoe UI', sans-serif;
+  --ifm-font-family-monospace: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+
+  --ifm-color-primary: #8b5cf6;
+  --ifm-color-primary-dark: #7c3aed;
+  --ifm-color-primary-darker: #6d28d9;
+  --ifm-color-primary-darkest: #5b21b6;
+  --ifm-color-primary-light: #a78bfa;
+  --ifm-color-primary-lighter: #c4b5fd;
+  --ifm-color-primary-lightest: #ddd6fe;
+
+  --ifm-background-color: #0a0615;
+  --ifm-background-surface-color: #161125;
+  --ifm-navbar-background-color: rgba(10, 6, 21, 0.8);
+  --ifm-footer-background-color: #070411;
+  --ifm-code-background: rgba(139, 92, 246, 0.12);
+  --ifm-global-shadow-lw: 0 16px 45px rgba(9, 6, 18, 0.4);
+  --ifm-link-color: #c4b5fd;
+  --ifm-link-hover-color: #ddd6fe;
+  --ifm-toc-border-color: rgba(196, 181, 253, 0.25);
+  --ifm-table-border-color: rgba(196, 181, 253, 0.2);
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='light'] {
+  --ifm-background-color: #f7f3ff;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-navbar-background-color: rgba(247, 243, 255, 0.92);
+  --ifm-footer-background-color: #ede6ff;
+  --ifm-font-color-base: #25143f;
+  --ifm-heading-color: #1f1234;
+  --ifm-link-color: #6d28d9;
+  --ifm-link-hover-color: #5b21b6;
+}
+
 [data-theme='dark'] {
-  --ifm-color-primary: #de4156;
-  --ifm-color-primary-dark: #da2940;
-  --ifm-color-primary-darker: #d0243b;
-  --ifm-color-primary-darkest: #ab1e31;
-  --ifm-color-primary-light: #e2596c;
-  --ifm-color-primary-lighter: #e46677;
-  --ifm-color-primary-lightest: #eb8a97;
+  --ifm-color-primary: #a78bfa;
+  --ifm-color-primary-dark: #8b5cf6;
+  --ifm-color-primary-darker: #7c3aed;
+  --ifm-color-primary-darkest: #6d28d9;
+  --ifm-color-primary-light: #c4b5fd;
+  --ifm-color-primary-lighter: #ddd6fe;
+  --ifm-color-primary-lightest: #ede9fe;
 }
 
-/* 
-Use this tool to generate colors: https://docusaurus.io/docs/2.0.1/migration/manual#updated-fields
-*/
+html,
+body {
+  background:
+    radial-gradient(1000px 600px at 5% -5%, rgba(167, 139, 250, 0.18), transparent 55%),
+    radial-gradient(900px 600px at 95% 0%, rgba(124, 58, 237, 0.2), transparent 60%),
+    var(--ifm-background-color);
+}
+
+.navbar {
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(167, 139, 250, 0.2);
+}
+
+.footer {
+  border-top: 1px solid rgba(167, 139, 250, 0.16);
+}
+
+.button.button--primary {
+  box-shadow: 0 12px 30px rgba(109, 40, 217, 0.38);
+}
+
+.card {
+  background: linear-gradient(160deg, rgba(167, 139, 250, 0.12), rgba(91, 33, 182, 0.08));
+  border: 1px solid rgba(196, 181, 253, 0.25);
+  box-shadow: var(--ifm-global-shadow-lw);
+}

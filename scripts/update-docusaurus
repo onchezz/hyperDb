@@ -1,19 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DOCS_DIR="$ROOT_DIR/docs"
 
-cp README.md ./docs-website/docs/docs/README.md && \
-echo "---
-title: Check out the README
-hide_title: true
----
-" | cat - ./docs-website/docs/docs/README.md > temp && mv temp ./docs-website/docs/docs/README.md && \
-cp CONTRIBUTING.md ./docs-website/docs/docs/CONTRIBUTING.md && \
-echo "---
-title: Contributing
-hide_title: true
----
-" | cat - ./docs-website/docs/docs/CONTRIBUTING.md > temp && mv temp ./docs-website/docs/docs/CONTRIBUTING.md && \
-cp CHANGELOG.md ./docs-website/docs/docs/CHANGELOG.md && \
-node scripts/replace-docs-path.mjs ./docs-website/docs/docs/CHANGELOG.md 
+if [[ ! -d "$DOCS_DIR" ]]; then
+  echo "[docs] Missing docs directory: $DOCS_DIR"
+  exit 1
+fi
 
+echo "[docs] Using canonical docs source: $DOCS_DIR"

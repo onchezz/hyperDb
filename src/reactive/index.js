@@ -3,6 +3,7 @@
 import { invariant } from '../utils/common'
 import { map, type Observable } from '../utils/rx'
 import type { Unsubscribe } from '../utils/subscriptions'
+import randomId from '../utils/common/randomId'
 
 import type Database from '../Database'
 import type Collection from '../Collection'
@@ -24,6 +25,10 @@ export type ReactiveOrderOptions = $Exact<{
 
 export type ReactiveUpsertOptions = $Exact<{
   onConflict?: string | string[],
+}>
+
+export type ReactiveClientOptions = $Exact<{
+  idGenerator?: () => string,
 }>
 
 type SelectColumns = null | string[]
@@ -108,15 +113,18 @@ class ReactiveTableQuery {
   _collection: Collection<Model>
   _clauses: Clause[]
   _selectedColumns: SelectColumns
+  _idGenerator: () => string
 
   constructor(
     collection: Collection<Model>,
     clauses: Clause[] = [],
     selectedColumns: SelectColumns = null,
+    idGenerator: () => string = randomId,
   ): void {
     this._collection = collection
     this._clauses = clauses
     this._selectedColumns = selectedColumns
+    this._idGenerator = idGenerator
   }
 
   _clone({
@@ -127,6 +135,7 @@ class ReactiveTableQuery {
       this._collection,
       clauses || this._clauses,
       selectedColumns === undefined ? this._selectedColumns : selectedColumns,
+      this._idGenerator,
     )
   }
 
@@ -140,6 +149,13 @@ class ReactiveTableQuery {
 
   _rowsFromRecords(records: Model[]): RowObject[] {
     return recordsToRows(records, this._selectedColumns)
+  }
+
+  _ensureRowId(row: RowObject): RowObject {
+    if (typeof row.id === 'string') {
+      return row
+    }
+    return { ...row, id: this._idGenerator() }
   }
 
   select(columns?: string | string[]): ReactiveTableQuery {
@@ -246,7 +262,7 @@ class ReactiveTableQuery {
   }
 
   async insert(values: RowObject | RowObject[]): Promise<ReactiveResponse<RowObject[]>> {
-    const rows = normalizeRows(values, 'insert()')
+    const rows = normalizeRows(values, 'insert()').map((row) => this._ensureRowId(row))
     try {
       let insertedRecords = []
       await this._collection.database.write(async () => {
@@ -301,7 +317,7 @@ class ReactiveTableQuery {
     values: RowObject | RowObject[],
     options: ReactiveUpsertOptions = {},
   ): Promise<ReactiveResponse<RowObject[]>> {
-    const rows = normalizeRows(values, 'upsert()')
+    const rows = normalizeRows(values, 'upsert()').map((row) => this._ensureRowId(row))
     const onConflict = options.onConflict
     if (onConflict) {
       const normalizedConflict = Array.isArray(onConflict) ? onConflict : [onConflict]
@@ -353,13 +369,17 @@ export type ReactiveClient = $Exact<{
   from: (tableName: TableName<any> | string) => ReactiveTableQuery,
 }>
 
-export function createReactiveClient(database: Database): ReactiveClient {
+export function createReactiveClient(
+  database: Database,
+  options: ReactiveClientOptions = {},
+): ReactiveClient {
   invariant(database, `[Reactive] Missing database passed to createReactiveClient()`)
+  const idGenerator = options.idGenerator || randomId
   return {
     from: (tableName: TableName<any> | string) => {
       // $FlowFixMe[incompatible-call]
       const collection: Collection<Model> = database.get((tableName: any))
-      return new ReactiveTableQuery(collection)
+      return new ReactiveTableQuery(collection, [], null, idGenerator)
     },
   }
 }

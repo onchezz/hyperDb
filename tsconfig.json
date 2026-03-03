@@ -3,8 +3,7 @@
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
-    "declaration": true,
-    "emitDeclarationOnly": true,
+    "noEmit": true,
     "experimentalDecorators": true
   },
   "include": [

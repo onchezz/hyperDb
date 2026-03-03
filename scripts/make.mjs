@@ -117,6 +117,7 @@ const copyNonJavaScriptFiles = (buildPath) => {
   createPackageJson(buildPath, pkg)
   copyFiles(buildPath, [
     'LICENSE',
+    'cli.js',
     // 'README.md',
     'yarn.lock',
     'WatermelonDB.podspec',

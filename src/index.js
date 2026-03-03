@@ -1,39 +1,82 @@
 // @flow
 
-import * as Q from './QueryDescription'
+import * as core from './core'
 
-export { default as Collection } from './Collection'
-export { default as Database } from './Database'
-export { default as Relation } from './Relation'
-export { default as Model, associations } from './Model'
-export { default as Query } from './Query'
-export { tableName, columnName, appSchema, tableSchema } from './Schema'
+export {
+  defineModel,
+  dbModel,
+  defineModels,
+  normalizeModels,
+  string,
+  number,
+  boolean,
+  json,
+  relation,
+  toSnakeCase,
+  createHyperTill,
+  createDB,
+} from './hypertill'
 
-export type { default as CollectionMap } from './Database/CollectionMap'
+export { core }
 
-export type { LocalStorageKey } from './Database/LocalStorage'
-export { localStorageKey } from './Database/LocalStorage'
+// Transitional aliases to keep import friction low while v2 becomes primary.
+export {
+  Collection,
+  Database,
+  Relation,
+  Model,
+  associations,
+  Query,
+  tableName,
+  columnName,
+  appSchema,
+  tableSchema,
+  localStorageKey,
+  createReactiveClient,
+  uuidv4,
+  setIdGenerator,
+  useUuidV4IdGenerator,
+  Q,
+} from './core'
 
-export type { DatabaseAdapter } from './adapters/type'
-export type { RawRecord, DirtyRaw } from './RawRecord'
-export type { RecordId } from './Model'
 export type {
+  CollectionMap,
+  LocalStorageKey,
+  DatabaseAdapter,
+  RawRecord,
+  DirtyRaw,
+  RecordId,
   TableName,
   ColumnName,
   ColumnType,
   ColumnSchema,
   TableSchema,
   AppSchema,
-} from './Schema'
-export type { SchemaMigrations } from './Schema/migrations'
-
-export { createReactiveClient } from './reactive'
-export type {
+  SchemaMigrations,
   ReactiveClient,
+  ReactiveClientOptions,
   ReactiveTableQuery,
   ReactiveResponse,
   ReactiveOrderOptions,
   ReactiveUpsertOptions,
-} from './reactive'
+  IdGenerator,
+} from './core'
 
-export { Q }
+export type {
+  RelationDescriptor,
+  DBModelOptions,
+  DBModel,
+  DefinedModelEntry,
+  DefinedModels,
+  MutationProgress,
+  MutationResult,
+  CreateDBOptions,
+  ModelDefinition,
+  ModelField,
+  FieldBuilder,
+  InternalFieldSpec,
+  HyperTillClient,
+  HyperTillModelApi,
+  QueryConfig,
+  CreateHyperTillOptions,
+} from './hypertill'

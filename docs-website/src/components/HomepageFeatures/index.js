@@ -4,29 +4,26 @@ import styles from './styles.module.css'
 
 const FeatureList = [
   {
-    title: 'Fast',
+    title: 'Fast Local Runtime',
     description: (
       <>
-        WatemerlonDB was designed from the ground up to be blazing fast ⚡️ and launch your app
-        instantly no matter how much data you have.
+        HyperTillDB keeps storage local-first so reads and writes stay fast even with large datasets.
       </>
     ),
   },
   {
-    title: 'Highly scalable',
+    title: 'Type-First API',
     description: (
       <>
-        WatermelonDB is built on rock-solid SQLite foundation and optimized to handle from hundreds
-        to tens of thousands of records.
+        Build your model registry with `dbModel`, `defineModels`, and `createDB` using one package API.
       </>
     ),
   },
   {
-    title: 'Offline-first',
+    title: 'Web + Native',
     description: (
       <>
-        Ideal for offline-first apps, sync with your own server using WatermelonDB Powerful Sync
-        Engine.
+        Use SQLite adapters on native and LokiJS on web with consistent query and hook behavior.
       </>
     ),
   },

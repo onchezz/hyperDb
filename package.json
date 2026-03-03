@@ -1,12 +1,15 @@
 {
-  "name": "@nozbe/watermelondb",
-  "description": "Build powerful React Native and React web apps that scale from hundreds to tens of thousands of records and remain fast",
-  "version": "0.28.1-0",
+  "name": "@onchez/hypertilldb",
+  "description": "HyperTillDB: model-first local-first database toolkit built on top of Watermelon internals",
+  "version": "0.0.1",
+  "main": "dist/index.js",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "up": "yarn",
+    "clean": "rimraf dist .npm-package docs-website/build docs-website/.docusaurus",
+    "clean:node": "rimraf node_modules docs-website/node_modules",
     "build": "NODE_ENV=production node ./scripts/make.mjs",
     "dev": "NODE_ENV=development node ./scripts/make.mjs",
     "dev:native": "react-native start",
@@ -18,6 +21,7 @@
     "test": "jest --config=./jest.config.js --forceExit",
     "ci": "yarn ci:check",
     "ci:check": "concurrently -c auto -n jest,eslint,flow,ts,tslint 'npm run test' 'npm run eslint' 'npm run flow' 'npm run test:typescript' 'npm run tslint' --kill-others-on-fail",
+    "test:all": "npm run ci:check && npm run docs:build",
     "test:android": "cd native/androidTest && ./gradlew connectedAndroidTest",
     "test:ios": "scripts/test-ios",
     "test:windows": "react-native run-windows",
@@ -32,35 +36,34 @@
     "docs:dev": "./scripts/update-docusaurus && cd docs-website && yarn start",
     "docs:build": "./scripts/update-docusaurus && cd docs-website && yarn build",
     "docs:deploy": "./scripts/update-docusaurus && cd docs-website && yarn deploy",
-    "build:enhanced:npm": "./scripts/build-enhanced-npm-package.sh",
-    "publish:enhanced:npm": "./scripts/publish-enhanced-npm.sh",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "hypertill:generate": "node ./cli.js generate",
+    "build:hypertill:npm": "./scripts/build-hypertill-package.sh",
+    "publish:hypertill:npm": "./scripts/publish-hypertill-npm.sh",
+    "publish:hypertill:repo": "./scripts/publish-hypertill-repo.sh"
   },
   "types": "src/index.d.ts",
-  "author": "@Nozbe",
-  "homepage": "https://github.com/Nozbe/WatermelonDB#readme",
-  "bugs": "https://github.com/Nozbe/WatermelonDB/issues",
+  "author": "@onchez",
+  "homepage": "https://github.com/onchezz/hyperDb#readme",
+  "bugs": "https://github.com/onchezz/hyperDb/issues",
   "license": "MIT",
   "keywords": [
+    "hypertilldb",
+    "local-first",
+    "offline-first",
+    "react-native",
+    "expo",
+    "react",
     "database",
     "sqlite",
-    "react",
-    "react-native",
-    "indexeddb",
-    "lokijs",
-    "watermelon",
     "watermelondb",
-    "offline",
-    "offline-first",
-    "persistence",
-    "reactive",
-    "rxjs",
-    "better-sqlite3",
-    "db"
+    "sync",
+    "realtime",
+    "reactive"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nozbe/WatermelonDB.git"
+    "url": "https://github.com/onchezz/hyperDb.git"
   },
   "dependencies": {
     "@babel/runtime": "7.26.0",
@@ -173,5 +176,8 @@
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
     "typescript": "^4.5.0"
+  },
+  "bin": {
+    "hypertill": "./cli.js"
   }
 }

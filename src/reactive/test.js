@@ -150,6 +150,39 @@ describe('reactive client', () => {
     expect(afterDelete.data).toEqual([])
   })
 
+  it('supports custom id generator for insert/upsert', async () => {
+    const generatedIds = ['uuid-insert-1', 'uuid-upsert-2']
+    const uuidClient = createReactiveClient(database, {
+      idGenerator: () => {
+        const next = generatedIds.shift()
+        if (!next) {
+          throw new Error('Out of generated IDs')
+        }
+        return next
+      },
+    })
+
+    const inserted = await uuidClient.from('mock_tasks').insert({
+      name: 'Task with custom id',
+      position: 100,
+      is_completed: false,
+      project_id: projectId,
+    })
+
+    expect(inserted.error).toBe(null)
+    expect(inserted.data && inserted.data[0] && inserted.data[0].id).toBe('uuid-insert-1')
+
+    const upserted = await uuidClient.from('mock_tasks').upsert({
+      name: 'Task via upsert custom id',
+      position: 101,
+      is_completed: false,
+      project_id: projectId,
+    })
+
+    expect(upserted.error).toBe(null)
+    expect(upserted.data && upserted.data[0] && upserted.data[0].id).toBe('uuid-upsert-2')
+  })
+
   it('returns errors for unsupported upsert conflict keys', async () => {
     await expect(
       client.from('mock_tasks').upsert(

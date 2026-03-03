@@ -1,36 +1,35 @@
 // @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
 
 const { themes } = require('prism-react-renderer')
+const { version } = require('./package.json')
+
 const lightTheme = themes.github
 const darkTheme = themes.dracula
-const { version } = require('./package.json')
+
+const repoOwner = process.env.DOCS_REPO_OWNER || 'onchezz'
+const repoName = process.env.DOCS_REPO_NAME || 'hyperDb'
+const repoBranch = process.env.DOCS_REPO_BRANCH || 'main'
+const explicitBaseUrl = process.env.DOCS_BASE_URL
+const inferredBaseUrl =
+  repoName.toLowerCase() === `${repoOwner.toLowerCase()}.github.io` ? '/' : `/${repoName}/`
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'HyperDB',
-  tagline: 'A local-first reactive data layer built on top of WatermelonDB',
+  title: 'HyperTillDB',
+  tagline: 'A local-first reactive developer layer built on top of WatermelonDB',
   favicon: 'img/favicon.ico',
 
-  // Set the production url of your site here
-  url: 'https://onchezz.github.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/hyperDb/',
+  url: `https://${repoOwner}.github.io`,
+  baseUrl: explicitBaseUrl || inferredBaseUrl,
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'onchezz', // Usually your GitHub org/user name.
-  projectName: 'hyperDb', // Usually your repo name.
+  organizationName: repoOwner,
+  projectName: repoName,
 
   trailingSlash: true,
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
 
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang. For example, if your site is Chinese, you may want
-  // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -39,16 +38,12 @@ const config = {
   presets: [
     [
       'classic',
-      /** @type {import('@docusaurus/preset-classic').Options} */
-      ({
+      {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/onchezz/hyperDb/edit/codex/enhancement-bootstrap/docs-website/',
+          editUrl: `https://github.com/${repoOwner}/${repoName}/edit/${repoBranch}/docs/`,
           routeBasePath: '/',
-          path: 'docs/docs',
+          path: '../docs',
           lastVersion: 'current',
           versions: {
             current: {
@@ -57,108 +52,81 @@ const config = {
             },
           },
         },
-        // blog: {
-        //   showReadingTime: true,
-        //   // Please change this to your repo.
-        //   // Remove this to remove the "edit this page" links.
-        //   editUrl:
-        //     'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-        // },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
-      }),
+      },
     ],
   ],
 
-  themeConfig:
-    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
-    ({
-      // Replace with your project's social card
-      image: 'img/watermelon-social-card.png',
-      navbar: {
-        title: 'HyperDB',
-        logo: {
-          alt: 'WatermelonDB Logo',
-          src: 'img/logo.svg',
+  themeConfig: {
+    image: 'img/hypertilldb-logo.svg',
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: false,
+      respectPrefersColorScheme: false,
+    },
+    navbar: {
+      title: 'HyperTillDB',
+      logo: {
+        alt: 'HyperTillDB Logo',
+        src: 'img/hypertilldb-logo.svg',
+      },
+      items: [
+        {
+          type: 'doc',
+          position: 'left',
+          label: 'Docs',
+          docId: 'HyperTillDB/Overview',
         },
-        items: [
-          {
-            type: 'doc',
-            position: 'left',
-            label: 'Docs',
-            docId: 'HyperDB/Overview',
-          },
-          {
-            type: 'docsVersionDropdown',
-            position: 'left',
-          },
-          // {to: '/blog', label: 'Blog', position: 'left'},
-          {
-            href: 'https://github.com/onchezz/hyperDb',
-            label: 'GitHub',
-            position: 'right',
-          },
-        ],
-      },
-      footer: {
-        style: 'dark',
-        links: [
-          {
-            title: 'Docs',
-            items: [
-              {
-                label: 'HyperDB Overview',
-                to: '/HyperDB/Overview',
-              },
-              // {
-              //   label: 'Advanced Guides',
-              //   to: '/docs/Advanced/Migrations',
-              // },
-              {
-                label: 'Contributing',
-                to: '/CONTRIBUTING',
-              },
-            ],
-          },
-          {
-            title: 'Community',
-            items: [
-              {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/watermelondb',
-              },
-              // {
-              //   label: 'Discord',
-              //   href: 'https://discordapp.com/invite/docusaurus',
-              // },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/radexp',
-              },
-            ],
-          },
-          {
-            title: 'More',
-            items: [
-              // {
-              //   label: 'Blog',
-              //   to: '/blog',
-              // },
-              {
-                label: 'GitHub',
-                href: 'https://github.com/onchezz/hyperDb',
-              },
-            ],
-          },
-        ],
-        copyright: `HyperDB docs and integration layer built on top of WatermelonDB by <a href="https://radex.io">Radek Pietruszewski</a> and <a href="https://nozbe.com">Nozbe</a>.`,
-      },
-      prism: {
-        theme: lightTheme,
-        darkTheme: darkTheme,
-      },
-    }),
+        {
+          type: 'docsVersionDropdown',
+          position: 'left',
+        },
+        {
+          href: `https://github.com/${repoOwner}/${repoName}`,
+          label: 'GitHub',
+          position: 'right',
+        },
+      ],
+    },
+    footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Docs',
+          items: [
+            {
+              label: 'HyperTillDB Overview',
+              to: '/HyperTillDB/Overview',
+            },
+            {
+              label: 'API Reference',
+              to: '/HyperTillDB/ApiReference',
+            },
+            {
+              label: 'Contributing',
+              to: '/CONTRIBUTING',
+            },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+            {
+              label: 'GitHub',
+              href: `https://github.com/${repoOwner}/${repoName}`,
+            },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} HyperTillDB.`,
+    },
+    prism: {
+      theme: lightTheme,
+      darkTheme,
+    },
+  },
 }
 
 module.exports = config

@@ -17,6 +17,10 @@ export type ReactiveUpsertOptions = {
   onConflict?: string | string[]
 }
 
+export type ReactiveClientOptions = {
+  idGenerator?: () => string
+}
+
 export interface ReactiveTableQuery<Row extends Record<string, any> = Record<string, any>> {
   select(columns?: string | string[]): ReactiveTableQuery<Row>
   eq(column: string, value: Value): ReactiveTableQuery<Row>
@@ -49,4 +53,7 @@ export type ReactiveClient = {
   ): ReactiveTableQuery<Row>
 }
 
-export function createReactiveClient(database: Database): ReactiveClient
+export function createReactiveClient(
+  database: Database,
+  options?: ReactiveClientOptions,
+): ReactiveClient
