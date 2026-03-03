@@ -1,6 +1,10 @@
 // @noflow
 
+import { Database, Model, appSchema, tableSchema } from '../core'
+import SQLiteAdapter from '../adapters/sqlite'
+import LokiJSAdapter from '../adapters/lokijs'
 import { createHyperTill } from '../runtime/createHyperTill'
+import { normalizeModels } from '../modeling'
 import { defineModels, isDefinedModels } from './defineModels'
 
 type MutationStatus = 'success' | 'error'
@@ -21,12 +25,28 @@ export type MutationResult<T> = {
 
 export type CreateDBOptions = {
   name?: string,
-  database: any,
+  database?: any,
   models: any,
+  schemaVersion?: number,
+  platform?: 'auto' | 'native' | 'web',
+  native?: {
+    dbName?: string,
+    jsi?: boolean,
+    onSetUpError?: (error: mixed) => void,
+  },
+  web?: {
+    dbName?: string,
+    useWebWorker?: boolean,
+    useIncrementalIndexedDB?: boolean,
+    onSetUpError?: (error: Error) => void,
+  },
   reactiveOptions?: { idGenerator?: () => string },
 }
 
 type MutationMode = 'soft' | 'hard'
+
+const DEFAULT_DB_NAME = 'hypertill'
+const DEFAULT_WEB_DB_NAME = 'hypertill_web'
 
 const toPlural = (value: string): string => (value.endsWith('s') ? value : `${value}s`)
 
@@ -100,6 +120,183 @@ const buildSoftDeletePayload = (timestamps: boolean): { [string]: mixed } => {
   return {
     deleted_at: now,
     updated_at: now,
+  }
+}
+
+const isWebRuntime = (): boolean =>
+  typeof window !== 'undefined' && typeof document !== 'undefined'
+
+const toCamelCase = (value: string): string =>
+  value.replace(/_([a-z])/g, (_match, group) => group.toUpperCase())
+
+const createModelClass = (table: string): Class<Model> => {
+  class HyperTillDynamicModel extends Model {}
+  HyperTillDynamicModel.table = table
+  return HyperTillDynamicModel
+}
+
+const toStorageColumnType = (kind: string): 'string' | 'number' | 'boolean' => {
+  if (kind === 'number' || kind === 'boolean') {
+    return kind
+  }
+  // JSON + relation foreign keys are persisted as strings.
+  return 'string'
+}
+
+const buildDefinedModelsFromSchemaModels = (schemaModels: any[]): any => {
+  const normalized = normalizeModels(schemaModels)
+  const byTable = normalized.reduce((acc, modelDef) => {
+    acc[modelDef.table] = modelDef
+    return acc
+  }, {})
+
+  const entries = normalized.map((modelDef) => {
+    const relations = modelDef.fields
+      .filter((field) => field.kind === 'relation')
+      .map((field) => {
+        const target = byTable[String(field.relationTable || '')]
+        const foreignKey = field.columnName
+        return {
+          targetName: target ? target.name : toCamelCase(String(field.relationTable || '')),
+          targetTable: String(field.relationTable || ''),
+          foreignKey,
+          fieldName: toCamelCase(foreignKey),
+          indexed: field.indexed !== false,
+          optional: field.optional === true,
+        }
+      })
+
+    const columns = modelDef.fields
+      .filter((field) => field.kind !== 'relation')
+      .reduce((acc, field) => {
+        acc[field.columnName] = {
+          type: field.kind,
+          indexed: field.indexed === true,
+          optional: field.optional === true,
+        }
+        return acc
+      }, {})
+
+    return {
+      name: modelDef.name,
+      table: modelDef.table,
+      deleteMode: 'soft',
+      timestamps: true,
+      columns,
+      relations,
+    }
+  })
+
+  const entriesByName = entries.reduce((acc, entry) => {
+    acc[entry.name] = entry
+    return acc
+  }, {})
+  const entriesByTable = entries.reduce((acc, entry) => {
+    acc[entry.table] = entry
+    return acc
+  }, {})
+
+  return Object.freeze({
+    __hypertillDefinedModels: true,
+    entries: Object.freeze(entries),
+    models: Object.freeze(normalized),
+    byName: Object.freeze(entriesByName),
+    byTable: Object.freeze(entriesByTable),
+  })
+}
+
+const buildColumnsForEntry = (entry: any): any[] => {
+  const mergedColumns = {
+    ...(entry.columns || {}),
+  }
+
+  entry.relations.forEach((relation) => {
+    if (!mergedColumns[relation.foreignKey]) {
+      mergedColumns[relation.foreignKey] = {
+        type: 'string',
+        indexed: relation.indexed !== false,
+        optional: relation.optional === true,
+      }
+    }
+  })
+
+  if (entry.timestamps) {
+    if (!mergedColumns.created_at) {
+      mergedColumns.created_at = { type: 'number', indexed: true, optional: false }
+    }
+    if (!mergedColumns.updated_at) {
+      mergedColumns.updated_at = { type: 'number', indexed: true, optional: false }
+    }
+    if (!mergedColumns.deleted_at) {
+      mergedColumns.deleted_at = { type: 'number', indexed: true, optional: true }
+    }
+  }
+
+  const columnNames = Object.keys(mergedColumns)
+  if (!columnNames.length) {
+    throw new Error(
+      `[HyperTillDB] Cannot infer runtime columns for model '${entry.name}'. For dbModel<T>(), pass an explicit database for now.`,
+    )
+  }
+
+  return columnNames.map((columnName) => {
+    const column = mergedColumns[columnName]
+    return {
+      name: columnName,
+      type: toStorageColumnType(column.type || 'string'),
+      isIndexed: column.indexed === true,
+      isOptional: column.optional === true,
+    }
+  })
+}
+
+const bootstrapDatabase = ({
+  name,
+  database,
+  definedModels,
+  schemaVersion = 1,
+  platform = 'auto',
+  native = {},
+  web = {},
+}): { database: any, schema: any | null } => {
+  if (database) {
+    return { database, schema: null }
+  }
+
+  const schema = appSchema({
+    version: schemaVersion,
+    tables: definedModels.entries.map((entry) =>
+      tableSchema({
+        name: entry.table,
+        columns: buildColumnsForEntry(entry),
+      }),
+    ),
+  })
+
+  const modelClasses = definedModels.entries.map((entry) => createModelClass(entry.table))
+  const useWebAdapter = platform === 'web' || (platform === 'auto' && isWebRuntime())
+
+  const adapter = useWebAdapter
+    ? new LokiJSAdapter({
+        schema,
+        dbName: web.dbName || `${name || DEFAULT_WEB_DB_NAME}`,
+        useWebWorker: web.useWebWorker === true,
+        useIncrementalIndexedDB: web.useIncrementalIndexedDB !== false,
+        onSetUpError: web.onSetUpError,
+      })
+    : new SQLiteAdapter({
+        schema,
+        dbName: native.dbName || name || DEFAULT_DB_NAME,
+        jsi: native.jsi !== false,
+        onSetUpError: native.onSetUpError,
+      })
+
+  return {
+    database: new Database({
+      adapter,
+      modelClasses,
+    }),
+    schema,
   }
 }
 
@@ -214,17 +411,46 @@ export const createDB = ({
   name,
   database,
   models,
+  schemaVersion = 1,
+  platform = 'auto',
+  native = {},
+  web = {},
   reactiveOptions = {},
 }: CreateDBOptions): any => {
-  const definedModels = isDefinedModels(models) ? models : defineModels(models)
-  const baseClient = createHyperTill({
+  const usesSchemaModels = Array.isArray(models)
+  const definedModels = isDefinedModels(models)
+    ? models
+    : usesSchemaModels
+      ? buildDefinedModelsFromSchemaModels(models)
+      : defineModels(models)
+
+  if (!database && !usesSchemaModels) {
+    throw new Error(
+      `[HyperTillDB] createDB() requires { database } when using dbModel()/defineModels(). ` +
+        `For zero-config runtime bootstrap, pass schema models: createDB({ models: [defineModel(...)] }).`,
+    )
+  }
+
+  const runtime = bootstrapDatabase({
+    name,
     database,
+    definedModels,
+    schemaVersion,
+    platform,
+    native,
+    web,
+  })
+
+  const baseClient = createHyperTill({
+    database: runtime.database,
     models: definedModels.models,
     reactiveOptions,
   })
 
   const client: { [string]: any } = {
     name: name || null,
+    database: runtime.database,
+    schema: runtime.schema,
     reactive: baseClient.reactive,
     events: baseClient.events,
     models: definedModels.models,

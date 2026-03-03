@@ -46,6 +46,8 @@ pkg.homepage = homepage
 pkg.bugs = bugsUrl
 pkg.publishConfig = { access: 'public' }
 pkg.description = 'HyperTillDB: model-first local-first database toolkit built on top of Watermelon internals'
+pkg.main = './index.js'
+pkg.types = './index.d.ts'
 pkg.bin = { hypertill: './cli.js' }
 
 if (pkg.scripts) {
@@ -58,6 +60,7 @@ if (pkg.scripts) {
 }
 
 delete pkg.private
+delete pkg.devDependencies
 
 fs.writeFileSync(file, `${JSON.stringify(pkg, null, 2)}\n`)
 console.log(`Prepared ${pkg.name}@${pkg.version}`)

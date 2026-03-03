@@ -8,7 +8,14 @@ export {
   toSnakeCase,
 } from './modeling'
 
-export type { ModelDefinition, ModelField, FieldBuilder, InternalFieldSpec } from './modeling'
+export type {
+  ModelDefinition,
+  ModelField,
+  FieldBuilder,
+  InternalFieldSpec,
+  InferModelInput,
+  InferModelRow,
+} from './modeling'
 
 export { dbModel, defineModels, relation, createDB } from './typeFirst'
 export type {
@@ -27,6 +34,8 @@ export type {
   ModelAPI,
   DBClient,
   CreateDBOptions,
+  CreateSchemaDBOptions,
+  SchemaDBClient,
 } from './typeFirst'
 
 export { createHyperTill } from './runtime'

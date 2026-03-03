@@ -1,6 +1,7 @@
 import type { ReactiveClient, ReactiveResponse, ReactiveUpsertOptions } from '../reactive'
 import type { ReactiveHookState } from '../reactive/react'
 import type { FieldBuilder } from '../modeling'
+import type { ModelDefinition, InferModelInput } from '../modeling'
 
 export type Scalar = string | number | boolean | null
 export type JsonValue = Scalar | JsonValue[] | { [key: string]: JsonValue }
@@ -158,6 +159,8 @@ type RootHooks<Models extends DBModelMap> = {
 export type DBClient<Models extends DBModelMap> = ModelAPIs<Models> &
   RootHooks<Models> & {
     name: string | null
+    database: object
+    schema: object | null
     reactive: ReactiveClient
     events: {
       emit(eventName: string, payload?: JsonValue): void
@@ -186,7 +189,77 @@ export type CreateDBOptions<Models extends DBModelMap> = {
   name?: string
   database: object
   models: Models | DefinedModels<Models>
+  schemaVersion?: number
+  platform?: 'auto' | 'native' | 'web'
+  native?: {
+    dbName?: string
+    jsi?: boolean
+    onSetUpError?: (error: unknown) => void
+  }
+  web?: {
+    dbName?: string
+    useWebWorker?: boolean
+    useIncrementalIndexedDB?: boolean
+    onSetUpError?: (error: Error) => void
+  }
   reactiveOptions?: { idGenerator?: () => string }
 }
 
 export declare function createDB<Models extends DBModelMap>(options: CreateDBOptions<Models>): DBClient<Models>
+
+type SchemaModelArray = ReadonlyArray<ModelDefinition<any, any>>
+type SchemaTableAPIs<SchemaModels extends SchemaModelArray> = {
+  [M in SchemaModels[number] as M['table']]: ModelAPI<InferModelInput<M>>
+}
+
+export type SchemaDBClient<SchemaModels extends SchemaModelArray> = SchemaTableAPIs<SchemaModels> & {
+  name: string | null
+  database: object
+  schema: object | null
+  reactive: ReactiveClient
+  events: {
+    emit(eventName: string, payload?: JsonValue): void
+    on(eventName: string, handler: (payload: JsonValue | undefined) => void): () => void
+    off(eventName: string, handler: (payload: JsonValue | undefined) => void): void
+    clear(): void
+  }
+  models: ReadonlyArray<{
+    table: string
+    name: string
+    fields: ReadonlyArray<{
+      name: string
+      columnName: string
+      kind: 'relation'
+      optional: boolean
+      indexed: boolean
+      hasDefault: boolean
+      relationTable: string
+    }>
+  }>
+  registry: DefinedModels<DBModelMap>
+  getModel(tableOrName: string): ModelAPI<RowShape>
+}
+
+export type CreateSchemaDBOptions<SchemaModels extends SchemaModelArray> = {
+  name?: string
+  database?: object
+  models: SchemaModels
+  schemaVersion?: number
+  platform?: 'auto' | 'native' | 'web'
+  native?: {
+    dbName?: string
+    jsi?: boolean
+    onSetUpError?: (error: unknown) => void
+  }
+  web?: {
+    dbName?: string
+    useWebWorker?: boolean
+    useIncrementalIndexedDB?: boolean
+    onSetUpError?: (error: Error) => void
+  }
+  reactiveOptions?: { idGenerator?: () => string }
+}
+
+export declare function createDB<SchemaModels extends SchemaModelArray>(
+  options: CreateSchemaDBOptions<SchemaModels>,
+): SchemaDBClient<SchemaModels>
