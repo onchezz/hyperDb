@@ -9,7 +9,7 @@ export {
   formatMigrationBlockedError,
 } from './migrations'
 
-export type { MutationProgress, MutationResult, CreateDBOptions } from './createDB'
+export type { MutationProgress, MutationResult, BulkWriteOptions, CreateDBOptions } from './createDB'
 export type {
   SchemaSnapshotColumn,
   SchemaSnapshotTable,

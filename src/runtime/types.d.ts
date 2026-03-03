@@ -2,14 +2,21 @@ import type { ReactiveClient, ReactiveResponse, ReactiveUpsertOptions } from '..
 import type { ModelDefinition } from '../modeling'
 
 export type QueryOperator = {
-  op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in'
+  op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'contains' | 'startsWith' | 'like'
   value: unknown
+}
+
+export type QuerySearch = {
+  value: string
+  columns: string[] | string
+  mode?: 'contains' | 'startsWith' | 'like'
 }
 
 export type QueryConfig = {
   select?: string[] | string
   where?: Record<string, unknown | QueryOperator>
   orderBy?: { column: string; ascending?: boolean } | string
+  search?: string | QuerySearch
   limit?: number
   range?: [number, number]
 }

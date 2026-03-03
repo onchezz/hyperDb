@@ -166,8 +166,170 @@ describe('typeFirst', () => {
     expect(result.status).toBe('success')
     expect(result.progress.total).toBe(3)
     expect(result.progress.current).toBe(3)
+    expect(result.progress.processed).toBe(3)
+    expect(result.progress.written).toBe(3)
+    expect(result.progress.failed).toBe(0)
+    expect(result.progress.chunk).toBe(1)
+    expect(result.progress.chunksTotal).toBe(1)
     expect(result.progress.percent).toBe(100)
     expect((result.data || []).length).toBe(3)
+  })
+
+  it('chunks createMany writes and reports progress without blocking a giant single batch', async () => {
+    const TaskModel = defineModel('tasks', {
+      name: string(),
+      is_done: boolean(),
+    })
+
+    const db = createDB({
+      name: 'schema-progress-chunked',
+      models: [TaskModel],
+      platform: 'web',
+    })
+
+    const progressLog = []
+    const result = await db.tasks.createMany(
+      [
+        { name: 'A', is_done: false },
+        { name: 'B', is_done: false },
+        { name: 'C', is_done: false },
+        { name: 'D', is_done: false },
+        { name: 'E', is_done: true },
+      ],
+      {
+        chunkSize: 2,
+        onProgress: (progress) => progressLog.push(progress),
+      },
+    )
+
+    expect(result.error).toBe(null)
+    expect(result.status).toBe('success')
+    expect(result.progress.total).toBe(5)
+    expect(result.progress.written).toBe(5)
+    expect(result.progress.chunk).toBe(3)
+    expect(result.progress.chunksTotal).toBe(3)
+    expect(progressLog.map((item) => item.chunk)).toEqual([1, 2, 3])
+    expect(progressLog[2].written).toBe(5)
+  })
+
+  it('writes 5000 products with chunked createMany and completes with full progress', async () => {
+    const ProductModel = defineModel('products', {
+      name: string(),
+      sku: string(),
+      status: string(),
+      price_cents: number(),
+      in_stock: boolean(),
+    })
+
+    const db = createDB({
+      name: 'schema-products-5000',
+      models: [ProductModel],
+      platform: 'web',
+    })
+
+    const products = Array.from({ length: 5000 }, (_value, index) => ({
+      name: `Product ${index + 1}`,
+      sku: `SKU-${index + 1}`,
+      status: index % 2 === 0 ? 'active' : 'draft',
+      price_cents: 100 + index,
+      in_stock: index % 3 !== 0,
+    }))
+
+    const progressLog = []
+    const startedAt = Date.now()
+    const result = await db.products.createMany(products, {
+      chunkSize: 250,
+      onProgress: (progress) => progressLog.push(progress),
+    })
+    const elapsedMs = Date.now() - startedAt
+
+    expect(result.error).toBe(null)
+    expect(result.status).toBe('success')
+    expect(result.progress.total).toBe(5000)
+    expect(result.progress.written).toBe(5000)
+    expect(result.progress.failed).toBe(0)
+    expect(result.progress.chunk).toBe(20)
+    expect(result.progress.chunksTotal).toBe(20)
+    expect((result.data || []).length).toBe(5000)
+    expect(progressLog).toHaveLength(20)
+    expect(progressLog[0].written).toBe(250)
+    expect(progressLog[19].written).toBe(5000)
+    expect(elapsedMs).toBeGreaterThanOrEqual(0)
+
+    const listed = await db.products.fetch({
+      where: { status: 'active' },
+      orderBy: { sku: 'asc' },
+      limit: 5,
+    })
+    expect(listed.error).toBe(null)
+    expect((listed.data || []).length).toBe(5)
+    expect(listed.data?.[0]?.sku).toBe('SKU-1')
+  })
+
+  it('returns partial_success when a later createMany chunk fails', async () => {
+    const TaskModel = defineModel('tasks', {
+      name: string(),
+      is_done: boolean(),
+    })
+
+    const db = createDB({
+      name: 'schema-progress-partial',
+      models: [TaskModel],
+      platform: 'web',
+    })
+
+    const duplicateId = 'dup-row-id'
+    const result = await db.tasks.createMany(
+      [
+        { id: 'row-1', name: 'A', is_done: false },
+        { id: 'row-2', name: 'B', is_done: false },
+        { id: duplicateId, name: 'C', is_done: false },
+        { id: duplicateId, name: 'D', is_done: false },
+      ],
+      {
+        chunkSize: 2,
+      },
+    )
+
+    expect(result.status).toBe('partial_success')
+    expect(result.error).toBeTruthy()
+    expect(result.progress.total).toBe(4)
+    expect(result.progress.written).toBe(2)
+    expect(result.progress.failed).toBe(2)
+    expect((result.data || []).length).toBe(2)
+
+    const persisted = await db.tasks.fetch({
+      orderBy: { name: 'asc' },
+    })
+    expect(persisted.error).toBe(null)
+    expect((persisted.data || []).map((item) => item.name)).toEqual(['A', 'B'])
+  })
+
+  it('supports shorthand orderBy object using app field names', async () => {
+    const TaskModel = defineModel('tasks', {
+      name: string(),
+      is_done: boolean(),
+    })
+
+    const db = createDB({
+      name: 'schema-order-by',
+      models: [TaskModel],
+      platform: 'web',
+    })
+
+    await db.tasks.createMany([
+      { name: 'Bravo', is_done: false },
+      { name: 'Alpha', is_done: false },
+      { name: 'Charlie', is_done: false },
+    ])
+
+    const ordered = await db.tasks.fetch({
+      orderBy: { name: 'asc' },
+      limit: 3,
+    })
+
+    expect(ordered.error).toBe(null)
+    expect((ordered.data || []).map((row) => row.name)).toEqual(['Alpha', 'Bravo', 'Charlie'])
   })
 
   it('exposes relation hooks for schema-first relation fields', async () => {
@@ -199,7 +361,54 @@ describe('typeFirst', () => {
     })
 
     expect(typeof db.useChaptersByBookId).toBe('function')
+    expect(typeof db.useChaptersByBook).toBe('function')
     const hook = renderHook(() => db.useChaptersByBookId(String(bookId)))
+    expect(hook.result.current.error).toBe(null)
+    expect(Array.isArray(hook.result.current.data) || hook.result.current.isLoading).toBe(true)
+  })
+
+  it('supports string search with selected columns and exposes root search hook', async () => {
+    const BookModel = defineModel('books', {
+      title: string(),
+      status: string(),
+      author_id: string(),
+    })
+
+    const db = createDB({
+      name: 'schema-search',
+      models: [BookModel],
+      platform: 'web',
+    })
+
+    await db.books.createMany([
+      { title: 'Deep Work', status: 'draft', author_id: 'a1' },
+      { title: 'Atomic Habits', status: 'published', author_id: 'a1' },
+      { title: 'Peak', status: 'archived', author_id: 'a2' },
+    ])
+
+    const byTitle = await db.books.search({
+      search: 'deep',
+      columns: ['title'],
+      orderBy: { title: 'asc' },
+    })
+    expect(byTitle.error).toBe(null)
+    expect((byTitle.data || []).map((row) => row.title)).toEqual(['Deep Work'])
+
+    const byStatus = await db.books.search({
+      search: 'pub',
+      columns: ['status'],
+      orderBy: { title: 'asc' },
+    })
+    expect(byStatus.error).toBe(null)
+    expect((byStatus.data || []).map((row) => row.title)).toEqual(['Atomic Habits'])
+
+    expect(typeof db.useBookSearch).toBe('function')
+    const hook = renderHook(() =>
+      db.useBookSearch({
+        search: 'deep',
+        columns: ['title'],
+      }),
+    )
     expect(hook.result.current.error).toBe(null)
     expect(Array.isArray(hook.result.current.data) || hook.result.current.isLoading).toBe(true)
   })
@@ -261,6 +470,8 @@ describe('typeFirst', () => {
     expect(list.error).toBe(null)
     expect((list.data || []).length).toBe(1)
     expect(list.data?.[0]?.authorId).toBe(authorId)
+    expect(typeof db.useBooksByAuthor).toBe('function')
+    expect(typeof db.useBooksByAuthorId).toBe('function')
   })
 
   it('plans additive smart migrations from previous snapshots', () => {

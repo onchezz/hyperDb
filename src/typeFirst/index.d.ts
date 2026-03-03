@@ -113,10 +113,26 @@ export type SystemColumns = {
 
 export type WithSystemColumns<Row extends RowShape> = Row & SystemColumns
 
+export type QueryOperator =
+  | { op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'startsWith' | 'like'; value: JsonValue }
+  | { op: 'in'; value: JsonValue[] }
+
+export type SearchMode = 'contains' | 'startsWith' | 'like'
+
+export type SearchOptions<Row extends RowShape> = {
+  search: string
+  columns?: ReadonlyArray<keyof WithSystemColumns<Row> & string> | (keyof WithSystemColumns<Row> & string)
+  mode?: SearchMode
+}
+
 export type QueryConfig<Row extends RowShape> = {
   select?: ReadonlyArray<keyof WithSystemColumns<Row> & string> | '*'
-  where?: Partial<WithSystemColumns<Row>>
-  orderBy?: { column: keyof WithSystemColumns<Row> & string; ascending?: boolean }
+  where?: Partial<{ [K in keyof WithSystemColumns<Row>]: WithSystemColumns<Row>[K] | QueryOperator }>
+  orderBy?:
+    | { column: keyof WithSystemColumns<Row> & string; ascending?: boolean }
+    | (keyof WithSystemColumns<Row> & string)
+    | Partial<Record<keyof WithSystemColumns<Row> & string, 'asc' | 'desc' | boolean>>
+  search?: string | SearchOptions<Row>
   limit?: number
   range?: [number, number]
 }
@@ -124,15 +140,26 @@ export type QueryConfig<Row extends RowShape> = {
 export type MutationProgress = {
   current: number
   total: number
+  processed: number
+  written: number
+  failed: number
   percent: number
+  chunk: number
+  chunksTotal: number
 }
 
 export type MutationResult<T> = {
   data: T | null
   error: Error | null
   loading: false
-  status: 'success' | 'error'
+  status: 'success' | 'partial_success' | 'error'
   progress: MutationProgress
+}
+
+export type BulkWriteOptions = {
+  chunkSize?: number
+  yieldMs?: number
+  onProgress?: (progress: MutationProgress) => void
 }
 
 export type SchemaSnapshotColumn = {
@@ -183,9 +210,10 @@ export type ModelAPI<Row extends RowShape> = {
   table: string
   query(config?: QueryConfig<Row>): object
   fetch(config?: QueryConfig<Row>): Promise<ReactiveResponse<WithSystemColumns<Row>[]>>
+  search(config: SearchOptions<Row> & Omit<QueryConfig<Row>, 'search'>): Promise<ReactiveResponse<WithSystemColumns<Row>[]>>
   subscribe(config: QueryConfig<Row>, listener: (payload: ReactiveResponse<WithSystemColumns<Row>[]>) => void): () => void
   create(values: Row): Promise<MutationResult<WithSystemColumns<Row>>>
-  createMany(values: ReadonlyArray<Row>): Promise<MutationResult<WithSystemColumns<Row>[]>>
+  createMany(values: ReadonlyArray<Row>, options?: BulkWriteOptions): Promise<MutationResult<WithSystemColumns<Row>[]>>
   update(id: string, values: Partial<Row>): Promise<MutationResult<WithSystemColumns<Row>>>
   patch(where: Partial<WithSystemColumns<Row>>, values: Partial<Row>): Promise<ReactiveResponse<WithSystemColumns<Row>[]>>
   remove(where: Partial<WithSystemColumns<Row>>): Promise<ReactiveResponse<WithSystemColumns<Row>[]>>
@@ -196,6 +224,10 @@ export type ModelAPI<Row extends RowShape> = {
   ): Promise<MutationResult<WithSystemColumns<Row>[]>>
   useList(
     config?: QueryConfig<Row>,
+    deps?: ReadonlyArray<string | number | boolean | null | undefined>,
+  ): ReactiveHookState<WithSystemColumns<Row>[]>
+  useSearch(
+    config: SearchOptions<Row> & Omit<QueryConfig<Row>, 'search'>,
     deps?: ReadonlyArray<string | number | boolean | null | undefined>,
   ): ReactiveHookState<WithSystemColumns<Row>[]>
   useById(
@@ -217,14 +249,35 @@ type RootHooks<Models extends DBModelMap> = {
     deps?: ReadonlyArray<string | number | boolean | null | undefined>,
   ) => ReactiveHookState<WithSystemColumns<ModelRow<Models[Name]>>[]>
 } & {
+  [Name in keyof Models & string as `use${Name}Search`]: (
+    config: SearchOptions<ModelRow<Models[Name]>> &
+      Omit<QueryConfig<ModelRow<Models[Name]>>, 'search'>,
+    deps?: ReadonlyArray<string | number | boolean | null | undefined>,
+  ) => ReactiveHookState<WithSystemColumns<ModelRow<Models[Name]>>[]>
+} & {
   [Name in keyof Models & string as `use${Name}ById`]: (
     id: string,
     deps?: ReadonlyArray<string | number | boolean | null | undefined>,
   ) => ReactiveHookState<WithSystemColumns<ModelRow<Models[Name]>> | null>
 }
 
+type RelationRootHooks<Models extends DBModelMap> = {
+  [Source in keyof Models & string as `use${Source}sBy${keyof Models & string}`]?: (
+    targetId: string,
+    config?: QueryConfig<ModelRow<Models[Source]>>,
+    deps?: ReadonlyArray<string | number | boolean | null | undefined>,
+  ) => ReactiveHookState<WithSystemColumns<ModelRow<Models[Source]>>[]>
+} & {
+  [Source in keyof Models & string as `use${Source}sBy${keyof Models & string}Id`]?: (
+    targetId: string,
+    config?: QueryConfig<ModelRow<Models[Source]>>,
+    deps?: ReadonlyArray<string | number | boolean | null | undefined>,
+  ) => ReactiveHookState<WithSystemColumns<ModelRow<Models[Source]>>[]>
+}
+
 export type DBClient<Models extends DBModelMap> = ModelAPIs<Models> &
-  RootHooks<Models> & {
+  RootHooks<Models> &
+  RelationRootHooks<Models> & {
     name: string | null
     database: object
     schema: object | null

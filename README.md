@@ -14,6 +14,8 @@ Implemented now:
 4. soft/hard delete modes per model
 5. `dbModel<T>()` type metadata extraction via Babel plugin (`@onchez/hypertilldb/babel-plugin`)
 6. smart migration planning for additive/rename-safe changes with destructive-change blocking
+7. string search with selectable columns (`search`, `columns`, `mode`)
+8. chunked `createMany` with internal defaults (override optional)
 
 Planned next:
 
@@ -113,7 +115,7 @@ Without this plugin (or without `defineModel(...)`), `createDB()` needs an expli
 ```ts
 const { data: books, error, isLoading } = db.useBooks({
   where: { authorId },
-  orderBy: { column: 'title', ascending: true },
+  orderBy: { title: 'asc' },
 })
 
 const { data: chapters } = db.useChapters({
@@ -122,6 +124,13 @@ const { data: chapters } = db.useChapters({
 })
 
 const { data: notes } = db.useNotesByChapterId(chapterId)
+
+const { data: searchedBooks } = db.useBookSearch({
+  search: 'deep',
+  columns: ['title', 'status'],
+  where: { authorId },
+  orderBy: { title: 'asc' },
+})
 ```
 
 Auto relation helpers:
@@ -139,11 +148,16 @@ type MutationResult<T> = {
   data: T | null
   error: Error | null
   loading: false
-  status: 'success' | 'error'
+  status: 'success' | 'partial_success' | 'error'
   progress: {
     total: number
     current: number
+    processed: number
+    written: number
+    failed: number
     percent: number
+    chunk: number
+    chunksTotal: number
   }
 }
 ```
@@ -161,7 +175,12 @@ Bulk write:
 
 ```ts
 const { data, error, status, progress } = await db.books.createMany(rows)
-// progress.current/progress.total gives write progress
+// Uses internal default chunking. Dev can override only if needed.
+
+const withCustomChunk = await db.books.createMany(rows, {
+  chunkSize: 500,
+  onProgress: (p) => console.log(p.written, p.percent, p.chunk, p.chunksTotal),
+})
 ```
 
 ## Large write performance (10,000+ rows)

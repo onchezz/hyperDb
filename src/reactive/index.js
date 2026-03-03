@@ -23,6 +23,10 @@ export type ReactiveOrderOptions = $Exact<{
   ascending?: boolean,
 }>
 
+export type ReactiveSearchOptions = $Exact<{
+  mode?: 'contains' | 'startsWith' | 'like',
+}>
+
 export type ReactiveUpsertOptions = $Exact<{
   onConflict?: string | string[],
 }>
@@ -52,6 +56,20 @@ const parseSelectColumns = (columns: string | string[] | void): SelectColumns =>
     return null
   }
   return Array.from(new Set(normalized))
+}
+
+const parseSearchColumns = (columns: string | string[] | void): string[] => {
+  if (!columns) {
+    return []
+  }
+  const parsed = Array.isArray(columns) ? columns : columns.split(',')
+  return Array.from(
+    new Set(
+      parsed
+        .map((column) => column.trim())
+        .filter(Boolean),
+    ),
+  )
 }
 
 const normalizeRows = (values: RowObject | RowObject[], action: string): RowObject[] => {
@@ -188,6 +206,53 @@ class ReactiveTableQuery {
 
   in(column: string, values: NonNullValues): ReactiveTableQuery {
     return this._appendClause(Q.where(columnName(column), Q.oneOf(values)))
+  }
+
+  like(column: string, value: string): ReactiveTableQuery {
+    invariant(typeof value === 'string', `[Reactive] like() expects a string value`)
+    return this._appendClause(Q.where(columnName(column), Q.like(value)))
+  }
+
+  contains(column: string, value: string): ReactiveTableQuery {
+    invariant(typeof value === 'string', `[Reactive] contains() expects a string value`)
+    const safe = Q.sanitizeLikeString(value)
+    return this._appendClause(Q.where(columnName(column), Q.like(`%${safe}%`)))
+  }
+
+  startsWith(column: string, value: string): ReactiveTableQuery {
+    invariant(typeof value === 'string', `[Reactive] startsWith() expects a string value`)
+    const safe = Q.sanitizeLikeString(value)
+    return this._appendClause(Q.where(columnName(column), Q.like(`${safe}%`)))
+  }
+
+  search(
+    value: string,
+    columns: string | string[],
+    options: ReactiveSearchOptions = {},
+  ): ReactiveTableQuery {
+    invariant(typeof value === 'string', `[Reactive] search() expects a string value`)
+    const normalizedColumns = parseSearchColumns(columns)
+    if (!normalizedColumns.length) {
+      return this
+    }
+
+    const mode = options.mode || 'contains'
+    let comparison
+    if (mode === 'like') {
+      comparison = Q.like(value)
+    } else if (mode === 'startsWith') {
+      comparison = Q.like(`${Q.sanitizeLikeString(value)}%`)
+    } else {
+      comparison = Q.like(`%${Q.sanitizeLikeString(value)}%`)
+    }
+
+    const clauses = normalizedColumns.map((column) =>
+      Q.where(columnName(column), comparison),
+    )
+    if (clauses.length === 1) {
+      return this._appendClause(clauses[0])
+    }
+    return this._appendClause(Q.or(...clauses))
   }
 
   match(values: RowObject): ReactiveTableQuery {

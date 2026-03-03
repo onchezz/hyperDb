@@ -13,6 +13,10 @@ export type ReactiveOrderOptions = {
   ascending?: boolean
 }
 
+export type ReactiveSearchOptions = {
+  mode?: 'contains' | 'startsWith' | 'like'
+}
+
 export type ReactiveUpsertOptions = {
   onConflict?: string | string[]
 }
@@ -30,6 +34,14 @@ export interface ReactiveTableQuery<Row extends Record<string, any> = Record<str
   lt(column: string, value: number | string | boolean): ReactiveTableQuery<Row>
   lte(column: string, value: number | string | boolean): ReactiveTableQuery<Row>
   in(column: string, values: Array<number | string | boolean>): ReactiveTableQuery<Row>
+  like(column: string, value: string): ReactiveTableQuery<Row>
+  contains(column: string, value: string): ReactiveTableQuery<Row>
+  startsWith(column: string, value: string): ReactiveTableQuery<Row>
+  search(
+    value: string,
+    columns: string | string[],
+    options?: ReactiveSearchOptions,
+  ): ReactiveTableQuery<Row>
   match(values: Record<string, Value>): ReactiveTableQuery<Row>
   order(column: string, options?: ReactiveOrderOptions): ReactiveTableQuery<Row>
   limit(count: number): ReactiveTableQuery<Row>

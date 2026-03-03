@@ -27,8 +27,12 @@ export type { FieldBuilder, InternalFieldSpec } from './modeling/fields'
 export type { HyperTillClient, HyperTillModelApi, QueryConfig, CreateHyperTillOptions } from './runtime/types'
 export type { RelationDescriptor, DBModelOptions, DBModel, DefinedModelEntry, DefinedModels } from './typeFirst/defineModels'
 export type {
+  QueryOperator,
+  SearchMode,
+  SearchOptions,
   MutationProgress,
   MutationResult,
+  BulkWriteOptions,
   CreateDBOptions,
   SchemaSnapshotColumn,
   SchemaSnapshotTable,

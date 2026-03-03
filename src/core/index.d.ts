@@ -32,6 +32,7 @@ export type {
   ReactiveTableQuery,
   ReactiveResponse,
   ReactiveOrderOptions,
+  ReactiveSearchOptions,
   ReactiveUpsertOptions,
 } from '../reactive'
 

@@ -3,13 +3,20 @@
 import { useReactiveQuery, useReactiveSingle } from '../reactive/react'
 
 type QueryOperator =
-  | { op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte', value: mixed }
+  | { op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'startsWith' | 'like', value: mixed }
   | { op: 'in', value: mixed[] }
+
+type QuerySearch = {
+  value: string,
+  columns: string[] | string,
+  mode?: 'contains' | 'startsWith' | 'like',
+}
 
 type QueryConfig = {
   select?: string[] | string,
   where?: { [string]: mixed | QueryOperator },
   orderBy?: { column: string, ascending?: boolean } | string,
+  search?: string | QuerySearch,
   limit?: number,
   range?: [number, number],
 }
@@ -50,6 +57,12 @@ const applyWhere = (query: any, where: { [string]: mixed | QueryOperator } = {})
           return nextQuery.lt(column, descriptor.value)
         case 'lte':
           return nextQuery.lte(column, descriptor.value)
+        case 'contains':
+          return nextQuery.contains(column, descriptor.value)
+        case 'startsWith':
+          return nextQuery.startsWith(column, descriptor.value)
+        case 'like':
+          return nextQuery.like(column, descriptor.value)
         case 'in':
           return nextQuery.in(column, descriptor.value)
         default:
@@ -70,6 +83,23 @@ export const applyQueryConfig = (query: any, config: QueryConfig = {}): any => {
 
   if (config.where) {
     nextQuery = applyWhere(nextQuery, config.where)
+  }
+
+  if (config.search) {
+    const normalizedSearch = typeof config.search === 'string'
+      ? { value: config.search, columns: [] }
+      : config.search
+
+    if (
+      normalizedSearch &&
+      typeof normalizedSearch.value === 'string' &&
+      normalizedSearch.value.length > 0 &&
+      normalizedSearch.columns
+    ) {
+      nextQuery = nextQuery.search(normalizedSearch.value, normalizedSearch.columns, {
+        mode: normalizedSearch.mode,
+      })
+    }
   }
 
   if (config.orderBy) {

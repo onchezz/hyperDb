@@ -12,7 +12,7 @@ This captures the current agreement for HyperTillDB vNext:
 
 ---
 
-## Implementation status (March 3, 2026)
+## Implementation status (March 4, 2026)
 
 Implemented now in code (`src/typeFirst/*`):
 
@@ -20,7 +20,9 @@ Implemented now in code (`src/typeFirst/*`):
 - `defineModels({...})` registry that resolves model names, tables, and relation foreign keys.
 - `relation.Author()` style helper (plus callable `relation('table')` compatibility).
 - `createDB({...})` runtime wrapper on top of reactive internals.
-- root hooks like `db.useBooks(...)` and relation hooks like `db.useBooksByAuthorId(...)`.
+- root hooks like `db.useBooks(...)` and relation hooks like:
+  - `db.useBooksByAuthorId(...)`
+  - `db.useBooksByAuthor(...)` (alias without `Id`)
 - simplified mutation result shape:
   - `{ data, error, loading, status, progress }`
 - default timestamp injection on writes (`created_at`, `updated_at`) and soft-delete mode support.
@@ -29,6 +31,19 @@ Implemented now in code (`src/typeFirst/*`):
   - `@onchez/hypertilldb/babel-plugin`
   - transforms `dbModel<Type>()` by injecting hidden `__typeMeta` field definitions.
 - camelCase-to-snake_case runtime mapping for model fields in create/update/fetch/hooks.
+- query ergonomics:
+  - `where` accepts app-field names (`authorId`)
+  - `orderBy` supports shorthand (`{ title: 'asc' }`) and normalized object form
+- search ergonomics:
+  - `db.<table>.search({ search, columns, mode })`
+  - root hook helpers like `db.useBookSearch(...)`
+  - reactive query operators: `contains`, `startsWith`, `like`
+- bulk writes:
+  - `createMany` performs internal chunked processing by default (dev does not need to pass `chunkSize`)
+  - optional override remains available for advanced tuning
+  - mutation status supports `partial_success` with deterministic progress fields
+- stress validation:
+  - automated test now covers inserting 5,000 rows with chunked flow and verifies progress + post-read query results
 
 Still intentionally deferred:
 
