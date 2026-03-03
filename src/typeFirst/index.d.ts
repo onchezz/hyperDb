@@ -17,6 +17,19 @@ export type DBModelOptions = {
   table?: string
   deleteMode?: 'soft' | 'hard'
   timestamps?: boolean
+  __typeMeta?: {
+    fields: Record<
+      string,
+      {
+        kind: 'string' | 'number' | 'boolean' | 'json'
+        optional?: boolean
+        indexed?: boolean
+        hasDefault?: boolean
+        defaultValue?: JsonValue
+        relationTable?: string
+      }
+    >
+  }
 }
 
 export type DBModel<Row extends RowShape> = {
@@ -37,11 +50,21 @@ export type DefinedModelEntry = {
   readonly table: string
   readonly deleteMode: 'soft' | 'hard'
   readonly timestamps: boolean
+  readonly columns: Record<
+    string,
+    {
+      type: 'string' | 'number' | 'boolean' | 'json'
+      indexed: boolean
+      optional: boolean
+    }
+  >
   readonly relations: ReadonlyArray<{
     readonly targetName: string
     readonly targetTable: string
     readonly foreignKey: string
     readonly fieldName: string
+    readonly optional: boolean
+    readonly indexed: boolean
   }>
 }
 
@@ -54,11 +77,11 @@ export type DefinedModels<Models extends DBModelMap = DBModelMap> = {
     readonly fields: ReadonlyArray<{
       readonly name: string
       readonly columnName: string
-      readonly kind: 'relation'
+      readonly kind: 'string' | 'number' | 'boolean' | 'json' | 'relation'
       readonly optional: boolean
       readonly indexed: boolean
       readonly hasDefault: boolean
-      readonly relationTable: string
+      readonly relationTable: string | null
     }>
   }>
   readonly byName: { [Name in keyof Models & string]: DefinedModelEntry }
@@ -112,6 +135,50 @@ export type MutationResult<T> = {
   progress: MutationProgress
 }
 
+export type SchemaSnapshotColumn = {
+  name: string
+  type: 'string' | 'number' | 'boolean'
+  isIndexed: boolean
+  isOptional: boolean
+}
+
+export type SchemaSnapshotTable = {
+  table: string
+  columns: ReadonlyArray<SchemaSnapshotColumn>
+}
+
+export type SchemaSnapshot = {
+  schemaVersion: number
+  generatedAt: string
+  tables: ReadonlyArray<SchemaSnapshotTable>
+}
+
+export type MigrationBlockedChange =
+  | { type: 'removed_table'; table: string }
+  | { type: 'removed_column'; table: string; column: string }
+  | { type: 'changed_column'; table: string; column: string }
+
+export type MigrationPlan = {
+  hasChanges: boolean
+  hasDestructiveChanges: boolean
+  blockedDestructiveChanges: ReadonlyArray<MigrationBlockedChange>
+  inferredRenameMap: Record<string, Record<string, string>>
+  renameMap: Record<string, Record<string, string>>
+  steps: ReadonlyArray<object>
+  sqliteMigrations: object | null
+  previousSchemaVersion: number
+  nextSchemaVersion: number
+}
+
+export type MigrationOptions = {
+  mode?: 'strict' | 'smart'
+  autoDefaults?: boolean
+  detectRename?: 'none' | 'same-type-one-to-one'
+  renameMap?: Record<string, Record<string, string>>
+  previousSnapshot?: SchemaSnapshot
+  onSnapshot?: (snapshot: SchemaSnapshot) => void
+}
+
 export type ModelAPI<Row extends RowShape> = {
   table: string
   query(config?: QueryConfig<Row>): object
@@ -161,6 +228,8 @@ export type DBClient<Models extends DBModelMap> = ModelAPIs<Models> &
     name: string | null
     database: object
     schema: object | null
+    migration: MigrationPlan | null
+    snapshot: SchemaSnapshot | null
     reactive: ReactiveClient
     events: {
       emit(eventName: string, payload?: JsonValue): void
@@ -174,11 +243,11 @@ export type DBClient<Models extends DBModelMap> = ModelAPIs<Models> &
       fields: ReadonlyArray<{
         name: string
         columnName: string
-        kind: 'relation'
+        kind: 'string' | 'number' | 'boolean' | 'json' | 'relation'
         optional: boolean
         indexed: boolean
         hasDefault: boolean
-        relationTable: string
+        relationTable: string | null
       }>
     }>
     registry: DefinedModels<Models>
@@ -187,7 +256,7 @@ export type DBClient<Models extends DBModelMap> = ModelAPIs<Models> &
 
 export type CreateDBOptions<Models extends DBModelMap> = {
   name?: string
-  database: object
+  database?: object
   models: Models | DefinedModels<Models>
   schemaVersion?: number
   platform?: 'auto' | 'native' | 'web'
@@ -202,6 +271,7 @@ export type CreateDBOptions<Models extends DBModelMap> = {
     useIncrementalIndexedDB?: boolean
     onSetUpError?: (error: Error) => void
   }
+  migration?: MigrationOptions
   reactiveOptions?: { idGenerator?: () => string }
 }
 
@@ -216,6 +286,8 @@ export type SchemaDBClient<SchemaModels extends SchemaModelArray> = SchemaTableA
   name: string | null
   database: object
   schema: object | null
+  migration: MigrationPlan | null
+  snapshot: SchemaSnapshot | null
   reactive: ReactiveClient
   events: {
     emit(eventName: string, payload?: JsonValue): void
@@ -229,11 +301,11 @@ export type SchemaDBClient<SchemaModels extends SchemaModelArray> = SchemaTableA
     fields: ReadonlyArray<{
       name: string
       columnName: string
-      kind: 'relation'
+      kind: 'string' | 'number' | 'boolean' | 'json' | 'relation'
       optional: boolean
       indexed: boolean
       hasDefault: boolean
-      relationTable: string
+      relationTable: string | null
     }>
   }>
   registry: DefinedModels<DBModelMap>
@@ -257,9 +329,23 @@ export type CreateSchemaDBOptions<SchemaModels extends SchemaModelArray> = {
     useIncrementalIndexedDB?: boolean
     onSetUpError?: (error: Error) => void
   }
+  migration?: MigrationOptions
   reactiveOptions?: { idGenerator?: () => string }
 }
 
 export declare function createDB<SchemaModels extends SchemaModelArray>(
   options: CreateSchemaDBOptions<SchemaModels>,
 ): SchemaDBClient<SchemaModels>
+
+export declare function createSchemaSnapshot(
+  tables: ReadonlyArray<SchemaSnapshotTable>,
+  schemaVersion: number,
+): SchemaSnapshot
+
+export declare function planSchemaMigration(
+  previousSnapshot: SchemaSnapshot | null | undefined,
+  nextSnapshot: SchemaSnapshot,
+  options?: MigrationOptions,
+): MigrationPlan
+
+export declare function formatMigrationBlockedError(blockedChanges: ReadonlyArray<MigrationBlockedChange>): Error

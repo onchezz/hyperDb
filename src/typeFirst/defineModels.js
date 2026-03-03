@@ -14,12 +14,36 @@ export type DBModelOptions = $ReadOnly<{
   table?: string,
   deleteMode?: 'soft' | 'hard',
   timestamps?: boolean,
+  __typeMeta?: {
+    fields: {
+      [string]: {
+        kind: 'string' | 'number' | 'boolean' | 'json',
+        optional?: boolean,
+        indexed?: boolean,
+        hasDefault?: boolean,
+        defaultValue?: mixed,
+        relationTable?: string,
+      },
+    },
+  },
 }>
 
 export type DBModelDefinition = $ReadOnly<{
   __hypertillDbModel: true,
   relations: $ReadOnlyArray<RelationDescriptor>,
   options: DBModelOptions,
+  typeMeta: ?{
+    fields: {
+      [string]: {
+        kind: 'string' | 'number' | 'boolean' | 'json',
+        optional?: boolean,
+        indexed?: boolean,
+        hasDefault?: boolean,
+        defaultValue?: mixed,
+        relationTable?: string,
+      },
+    },
+  },
 }>
 
 export type DBModel = DBModelDefinition
@@ -29,12 +53,21 @@ export type DefinedModelEntry = $ReadOnly<{
   table: string,
   deleteMode: 'soft' | 'hard',
   timestamps: boolean,
+  columns: {
+    [string]: {
+      type: 'string' | 'number' | 'boolean' | 'json',
+      indexed: boolean,
+      optional: boolean,
+    },
+  },
   relations: $ReadOnlyArray<
     $ReadOnly<{
       targetName: string,
       targetTable: string,
       foreignKey: string,
       fieldName: string,
+      optional: boolean,
+      indexed: boolean,
     }>,
   >,
 }>
@@ -82,6 +115,39 @@ const inferTableName = (modelName: string): string => {
 const inferForeignKey = (targetName: string): string => `${toSnakeCase(targetName)}_id`
 
 const inferFieldNameFromForeignKey = (foreignKey: string): string => toCamelCase(foreignKey)
+
+const toSingularSnake = (value: string): string => {
+  const snake = toSnakeCase(value)
+  if (snake.endsWith('_id')) {
+    return snake.slice(0, -3)
+  }
+  return snake.endsWith('s') && snake.length > 1 ? snake.slice(0, -1) : snake
+}
+
+const inferRelationTargetFromField = (
+  fieldName: string,
+  tableByName: { [string]: string },
+): ?string => {
+  const snake = toSnakeCase(fieldName)
+  if (!snake.endsWith('_id')) {
+    return null
+  }
+
+  const targetBase = toSingularSnake(snake)
+  const targetByModelName = Object.keys(tableByName).find(
+    (candidate) => toSingularSnake(candidate) === targetBase,
+  )
+  if (targetByModelName) {
+    return targetByModelName
+  }
+
+  const targetByTable = Object.keys(tableByName).find((candidate) => {
+    const table = tableByName[candidate]
+    return toSingularSnake(table) === targetBase
+  })
+
+  return targetByTable || null
+}
 
 const resolveTargetModelName = (
   targetName: string,
@@ -161,6 +227,14 @@ export const dbModel = (...args: mixed[]): DBModelDefinition => {
     __hypertillDbModel: true,
     relations: Object.freeze(relations),
     options: Object.freeze(options),
+    typeMeta:
+      options.__typeMeta && options.__typeMeta.fields
+        ? Object.freeze({
+            fields: Object.freeze({
+              ...options.__typeMeta.fields,
+            }),
+          })
+        : null,
   })
 }
 
@@ -195,7 +269,34 @@ const defineModelEntries = (modelsShape: { [string]: DBModelDefinition }): Defin
   const entries = modelNames.map((modelName) => {
     const modelDef = modelsShape[modelName]
     const table = tableByName[modelName]
-    const relations = modelDef.relations.map((item) => {
+
+    const typeMetaFields = modelDef.typeMeta && modelDef.typeMeta.fields ? modelDef.typeMeta.fields : null
+    const inferredRelations = []
+    if (typeMetaFields) {
+      Object.keys(typeMetaFields).forEach((fieldName) => {
+        const fieldSpec = typeMetaFields[fieldName]
+        const explicitTarget = fieldSpec && fieldSpec.relationTable
+        const targetModelName = explicitTarget
+          ? resolveTargetModelName(explicitTarget, tableByName)
+          : inferRelationTargetFromField(fieldName, tableByName)
+
+        if (!targetModelName) {
+          return
+        }
+
+        const foreignKey = toSnakeCase(fieldName)
+        inferredRelations.push({
+          targetName: targetModelName,
+          targetTable: tableByName[targetModelName],
+          foreignKey,
+          fieldName: inferFieldNameFromForeignKey(foreignKey),
+          optional: fieldSpec && fieldSpec.optional === true,
+          indexed: fieldSpec ? fieldSpec.indexed !== false : true,
+        })
+      })
+    }
+
+    const explicitRelations = modelDef.relations.map((item) => {
       const targetModelName = resolveTargetModelName(item.targetName, tableByName)
       const foreignKey = item.foreignKey || inferForeignKey(targetModelName)
       return {
@@ -203,32 +304,102 @@ const defineModelEntries = (modelsShape: { [string]: DBModelDefinition }): Defin
         targetTable: tableByName[targetModelName],
         foreignKey,
         fieldName: inferFieldNameFromForeignKey(foreignKey),
+        optional: false,
+        indexed: true,
       }
     })
+
+    const relationByForeignKey = {}
+    inferredRelations.concat(explicitRelations).forEach((relation) => {
+      relationByForeignKey[relation.foreignKey] = relation
+    })
+
+    const typedFields = typeMetaFields
+      ? Object.keys(typeMetaFields)
+          .sort((a, b) => a.localeCompare(b))
+          .map((fieldName) => {
+            const spec = typeMetaFields[fieldName]
+            const columnName = toSnakeCase(fieldName)
+            const relation = relationByForeignKey[columnName]
+            const isRelation = !!relation
+
+            return {
+              name: fieldName,
+              columnName,
+              kind: isRelation ? 'relation' : spec.kind,
+              optional: spec.optional === true,
+              indexed: isRelation ? relation.indexed !== false : spec.indexed === true,
+              hasDefault: spec.hasDefault === true,
+              defaultValue: spec.defaultValue,
+              relationTable: isRelation ? relation.targetTable : null,
+            }
+          })
+      : []
+
+    const extraRelationFields = Object.keys(relationByForeignKey)
+      .filter((foreignKey) => !typedFields.some((field) => field.columnName === foreignKey))
+      .map((foreignKey) => {
+        const rel = relationByForeignKey[foreignKey]
+        return {
+          name: rel.fieldName,
+          columnName: rel.foreignKey,
+          kind: 'relation',
+          optional: rel.optional === true,
+          indexed: rel.indexed !== false,
+          hasDefault: false,
+          defaultValue: undefined,
+          relationTable: rel.targetTable,
+        }
+      })
+
+    const mergedFields = typedFields.concat(extraRelationFields)
+    const columns = {}
+    mergedFields
+      .filter((field) => field.kind !== 'relation')
+      .forEach((field) => {
+        columns[field.columnName] = {
+          type: field.kind,
+          indexed: field.indexed === true,
+          optional: field.optional === true,
+        }
+      })
 
     return {
       name: modelName,
       table,
       deleteMode: modelDef.options.deleteMode || 'soft',
       timestamps: modelDef.options.timestamps !== false,
-      relations,
+      columns,
+      relations: Object.freeze(
+        Object.keys(relationByForeignKey)
+          .sort((a, b) => a.localeCompare(b))
+          .map((foreignKey) => relationByForeignKey[foreignKey]),
+      ),
+      fields: mergedFields,
     }
   })
 
-  const baseModels = entries.map((entry) => ({
-    table: entry.table,
-    name: entry.name,
-    fields: entry.relations.map((rel) => ({
-      name: rel.fieldName,
-      columnName: rel.foreignKey,
-      kind: 'relation',
-      optional: false,
-      indexed: true,
-      hasDefault: false,
-      defaultValue: undefined,
-      relationTable: rel.targetTable,
-    })),
-  }))
+  const baseModels = entries.map((entry) => {
+    const baseFields =
+      entry.fields && entry.fields.length
+        ? entry.fields
+        : entry.relations.map((rel) => ({
+            name: rel.fieldName,
+            columnName: rel.foreignKey,
+            kind: 'relation',
+            optional: rel.optional === true,
+            indexed: rel.indexed !== false,
+            hasDefault: false,
+            defaultValue: undefined,
+            relationTable: rel.targetTable,
+          }))
+
+    return {
+      table: entry.table,
+      name: entry.name,
+      fields: baseFields,
+    }
+  })
 
   const normalizedBaseModels = normalizeModels(baseModels)
   const normalizedByTable = normalizedBaseModels.reduce((acc, modelDef) => {

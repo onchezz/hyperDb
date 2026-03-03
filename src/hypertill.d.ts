@@ -17,7 +17,15 @@ export type {
   InferModelRow,
 } from './modeling'
 
-export { dbModel, defineModels, relation, createDB } from './typeFirst'
+export {
+  dbModel,
+  defineModels,
+  relation,
+  createDB,
+  createSchemaSnapshot,
+  planSchemaMigration,
+  formatMigrationBlockedError,
+} from './typeFirst'
 export type {
   JsonValue,
   RowShape,
@@ -36,6 +44,12 @@ export type {
   CreateDBOptions,
   CreateSchemaDBOptions,
   SchemaDBClient,
+  SchemaSnapshotColumn,
+  SchemaSnapshotTable,
+  SchemaSnapshot,
+  MigrationBlockedChange,
+  MigrationPlan,
+  MigrationOptions,
 } from './typeFirst'
 
 export { createHyperTill } from './runtime'

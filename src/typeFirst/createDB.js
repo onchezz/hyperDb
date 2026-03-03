@@ -5,6 +5,11 @@ import SQLiteAdapter from '../adapters/sqlite'
 import LokiJSAdapter from '../adapters/lokijs'
 import { createHyperTill } from '../runtime/createHyperTill'
 import { normalizeModels } from '../modeling'
+import {
+  createSchemaSnapshot,
+  formatMigrationBlockedError,
+  planSchemaMigration,
+} from './migrations'
 import { defineModels, isDefinedModels } from './defineModels'
 
 type MutationStatus = 'success' | 'error'
@@ -39,6 +44,30 @@ export type CreateDBOptions = {
     useWebWorker?: boolean,
     useIncrementalIndexedDB?: boolean,
     onSetUpError?: (error: Error) => void,
+  },
+  migration?: {
+    mode?: 'strict' | 'smart',
+    autoDefaults?: boolean,
+    detectRename?: 'none' | 'same-type-one-to-one',
+    renameMap?: {
+      [string]: {
+        [string]: string,
+      },
+    },
+    previousSnapshot?: {
+      schemaVersion: number,
+      generatedAt: string,
+      tables: Array<{
+        table: string,
+        columns: Array<{
+          name: string,
+          type: 'string' | 'number' | 'boolean',
+          isIndexed: boolean,
+          isOptional: boolean,
+        }>,
+      }>,
+    },
+    onSnapshot?: (snapshot: mixed) => void,
   },
   reactiveOptions?: { idGenerator?: () => string },
 }
@@ -121,6 +150,66 @@ const buildSoftDeletePayload = (timestamps: boolean): { [string]: mixed } => {
     deleted_at: now,
     updated_at: now,
   }
+}
+
+const buildFieldMaps = (model: any): {
+  appToStorage: { [string]: string },
+  storageToApp: { [string]: string },
+} => {
+  const appToStorage = {}
+  const storageToApp = {}
+  ;(model?.fields || []).forEach((field) => {
+    if (!field || !field.name || !field.columnName) {
+      return
+    }
+    appToStorage[field.name] = field.columnName
+    storageToApp[field.columnName] = field.name
+  })
+  return { appToStorage, storageToApp }
+}
+
+const mapRowToStorage = (row: { [string]: mixed }, appToStorage: { [string]: string }): { [string]: mixed } =>
+  Object.keys(row || {}).reduce((acc, key) => {
+    const storageKey = appToStorage[key] || key
+    acc[storageKey] = row[key]
+    return acc
+  }, {})
+
+const mapRowToApp = (row: { [string]: mixed }, storageToApp: { [string]: string }): { [string]: mixed } =>
+  Object.keys(row || {}).reduce((acc, key) => {
+    const appKey = storageToApp[key] || key
+    acc[appKey] = row[key]
+    return acc
+  }, {})
+
+const mapRowsToApp = (rows: any[] = [], storageToApp: { [string]: string }): any[] =>
+  rows.map((row) => mapRowToApp(row, storageToApp))
+
+const mapQueryConfigToStorage = (config: any, appToStorage: { [string]: string }): any => {
+  if (!config) {
+    return config
+  }
+
+  const mapped = { ...config }
+  if (mapped.where && typeof mapped.where === 'object') {
+    mapped.where = Object.keys(mapped.where).reduce((acc, key) => {
+      acc[appToStorage[key] || key] = mapped.where[key]
+      return acc
+    }, {})
+  }
+
+  if (mapped.orderBy && typeof mapped.orderBy === 'object' && mapped.orderBy.column) {
+    mapped.orderBy = {
+      ...mapped.orderBy,
+      column: appToStorage[mapped.orderBy.column] || mapped.orderBy.column,
+    }
+  }
+
+  if (Array.isArray(mapped.select)) {
+    mapped.select = mapped.select.map((item) => appToStorage[item] || item)
+  }
+
+  return mapped
 }
 
 const isWebRuntime = (): boolean =>
@@ -250,6 +339,63 @@ const buildColumnsForEntry = (entry: any): any[] => {
   })
 }
 
+const createSchemaTablesFromEntries = (entries: any[]): any[] =>
+  entries.map((entry) => ({
+    table: entry.table,
+    columns: buildColumnsForEntry(entry).map((column) => ({
+      name: column.name,
+      type: column.type,
+      isIndexed: column.isIndexed === true,
+      isOptional: column.isOptional === true,
+    })),
+  }))
+
+const canAutoBootstrapFromDefinedModels = (entries: any[]): boolean =>
+  entries.every((entry) => Object.keys(entry.columns || {}).length > 0)
+
+const resolveMigrationState = ({
+  schemaVersion,
+  entries,
+  migration,
+}: {
+  schemaVersion: number,
+  entries: any[],
+  migration?: any,
+}): {
+  schemaVersion: number,
+  sqliteMigrations: any | null,
+  report: any | null,
+  snapshot: any,
+} => {
+  const migrationOptions = migration || {}
+  const baseSnapshot = migrationOptions.previousSnapshot || null
+  const baseVersion = baseSnapshot ? Number(baseSnapshot.schemaVersion || 1) : Number(schemaVersion || 1)
+
+  const nextSnapshot = createSchemaSnapshot(createSchemaTablesFromEntries(entries), baseVersion)
+  const plan = planSchemaMigration(baseSnapshot, nextSnapshot, migrationOptions)
+
+  if (plan.blockedDestructiveChanges.length > 0) {
+    throw formatMigrationBlockedError(plan.blockedDestructiveChanges)
+  }
+
+  const effectiveSchemaVersion = baseSnapshot ? plan.nextSchemaVersion : Number(schemaVersion || 1)
+  const snapshot = {
+    ...nextSnapshot,
+    schemaVersion: effectiveSchemaVersion,
+  }
+
+  if (typeof migrationOptions.onSnapshot === 'function') {
+    migrationOptions.onSnapshot(snapshot)
+  }
+
+  return {
+    schemaVersion: effectiveSchemaVersion,
+    sqliteMigrations: plan.sqliteMigrations,
+    report: plan,
+    snapshot,
+  }
+}
+
 const bootstrapDatabase = ({
   name,
   database,
@@ -258,6 +404,7 @@ const bootstrapDatabase = ({
   platform = 'auto',
   native = {},
   web = {},
+  sqliteMigrations = null,
 }): { database: any, schema: any | null } => {
   if (database) {
     return { database, schema: null }
@@ -288,6 +435,7 @@ const bootstrapDatabase = ({
         schema,
         dbName: native.dbName || name || DEFAULT_DB_NAME,
         jsi: native.jsi !== false,
+        migrations: sqliteMigrations || undefined,
         onSetUpError: native.onSetUpError,
       })
 
@@ -300,12 +448,20 @@ const bootstrapDatabase = ({
   }
 }
 
-const buildModelApi = (baseApi: any, entry: any): any => {
+const buildModelApi = (baseApi: any, entry: any, model: any): any => {
   const baseCreate = baseApi.create.bind(baseApi)
   const baseCreateMany = baseApi.createMany.bind(baseApi)
   const baseUpdate = baseApi.update.bind(baseApi)
   const baseDelete = baseApi.delete.bind(baseApi)
   const baseUpsert = baseApi.upsert.bind(baseApi)
+  const baseFetch = baseApi.fetch.bind(baseApi)
+  const baseQuery = baseApi.query.bind(baseApi)
+  const baseSubscribe = baseApi.subscribe.bind(baseApi)
+  const basePatch = baseApi.patch.bind(baseApi)
+  const baseRemove = baseApi.remove.bind(baseApi)
+  const baseUseList = baseApi.useList.bind(baseApi)
+  const baseUseById = baseApi.useById.bind(baseApi)
+  const { appToStorage, storageToApp } = buildFieldMaps(model)
 
   const wrapResponse = (response: any, total: number): MutationResult<any> => {
     if (!response) {
@@ -314,16 +470,84 @@ const buildModelApi = (baseApi: any, entry: any): any => {
     if (response.error) {
       return errorMutation(response.error, total)
     }
-    const rows = response.data || []
+    const rows = mapRowsToApp(response.data || [], storageToApp)
     const data = total === 1 ? firstOrNull(rows) : rows
     return successMutation(data, total, rows.length)
   }
 
   return {
     ...baseApi,
+    query: (config?: any): any => baseQuery(mapQueryConfigToStorage(config, appToStorage)),
+    fetch: async (config?: any): Promise<any> => {
+      const response = await baseFetch(mapQueryConfigToStorage(config, appToStorage))
+      if (response && !response.error) {
+        return {
+          ...response,
+          data: mapRowsToApp(response.data || [], storageToApp),
+        }
+      }
+      return response
+    },
+    subscribe: (config: any, listener: (payload: any) => void): (() => void) =>
+      baseSubscribe(mapQueryConfigToStorage(config, appToStorage), (payload) => {
+        if (payload && !payload.error) {
+          listener({
+            ...payload,
+            data: mapRowsToApp(payload.data || [], storageToApp),
+          })
+          return
+        }
+        listener(payload)
+      }),
+    patch: async (where: { [string]: mixed }, values: { [string]: mixed }): Promise<any> => {
+      const response = await basePatch(
+        mapRowToStorage(where || {}, appToStorage),
+        mapRowToStorage(values || {}, appToStorage),
+      )
+      if (response && !response.error) {
+        return {
+          ...response,
+          data: mapRowsToApp(response.data || [], storageToApp),
+        }
+      }
+      return response
+    },
+    remove: async (where: { [string]: mixed }): Promise<any> => {
+      const response = await baseRemove(mapRowToStorage(where || {}, appToStorage))
+      if (response && !response.error) {
+        return {
+          ...response,
+          data: mapRowsToApp(response.data || [], storageToApp),
+        }
+      }
+      return response
+    },
+    useList: (config?: any, deps?: mixed[]): any => {
+      const state = baseUseList(mapQueryConfigToStorage(config, appToStorage), deps)
+      if (state && Array.isArray(state.data)) {
+        return {
+          ...state,
+          data: mapRowsToApp(state.data, storageToApp),
+        }
+      }
+      return state
+    },
+    useById: (id: string, deps?: mixed[]): any => {
+      const state = baseUseById(id, deps)
+      if (state && state.data && typeof state.data === 'object') {
+        return {
+          ...state,
+          data: mapRowToApp(state.data, storageToApp),
+        }
+      }
+      return state
+    },
     create: async (values: { [string]: mixed }): Promise<MutationResult<any>> => {
       try {
-        const payload = applyCreateSystemFields(values, entry.timestamps)
+        const payload = applyCreateSystemFields(
+          mapRowToStorage(values || {}, appToStorage),
+          entry.timestamps,
+        )
         const response = await baseCreate(payload)
         return wrapResponse(response, 1)
       } catch (error) {
@@ -332,7 +556,12 @@ const buildModelApi = (baseApi: any, entry: any): any => {
     },
     createMany: async (values: { [string]: mixed }[]): Promise<MutationResult<any[]>> => {
       try {
-        const payload = values.map((item) => applyCreateSystemFields(item, entry.timestamps))
+        const payload = values.map((item) =>
+          applyCreateSystemFields(
+            mapRowToStorage(item || {}, appToStorage),
+            entry.timestamps,
+          ),
+        )
         const response = await baseCreateMany(payload)
         return wrapResponse(response, payload.length)
       } catch (error) {
@@ -341,7 +570,10 @@ const buildModelApi = (baseApi: any, entry: any): any => {
     },
     update: async (id: string, values: { [string]: mixed }): Promise<MutationResult<any>> => {
       try {
-        const payload = applyUpdateSystemFields(values, entry.timestamps)
+        const payload = applyUpdateSystemFields(
+          mapRowToStorage(values || {}, appToStorage),
+          entry.timestamps,
+        )
         const response = await baseUpdate(id, payload)
         return wrapResponse(response, 1)
       } catch (error) {
@@ -367,7 +599,12 @@ const buildModelApi = (baseApi: any, entry: any): any => {
     upsert: async (values: { [string]: mixed } | { [string]: mixed }[], options?: mixed): Promise<MutationResult<any[]>> => {
       const rows = Array.isArray(values) ? values : [values]
       try {
-        const payload = rows.map((row) => applyCreateSystemFields(row, entry.timestamps))
+        const payload = rows.map((row) =>
+          applyCreateSystemFields(
+            mapRowToStorage(row || {}, appToStorage),
+            entry.timestamps,
+          ),
+        )
         const response = await baseUpsert(payload, options)
         return wrapResponse(response, payload.length)
       } catch (error) {
@@ -415,6 +652,7 @@ export const createDB = ({
   platform = 'auto',
   native = {},
   web = {},
+  migration,
   reactiveOptions = {},
 }: CreateDBOptions): any => {
   const usesSchemaModels = Array.isArray(models)
@@ -423,22 +661,38 @@ export const createDB = ({
     : usesSchemaModels
       ? buildDefinedModelsFromSchemaModels(models)
       : defineModels(models)
+  const hasDefinedModelColumns = canAutoBootstrapFromDefinedModels(definedModels.entries)
+  const shouldAutoBootstrapWithoutDatabase = usesSchemaModels || hasDefinedModelColumns
 
-  if (!database && !usesSchemaModels) {
+  if (!database && !shouldAutoBootstrapWithoutDatabase) {
     throw new Error(
-      `[HyperTillDB] createDB() requires { database } when using dbModel()/defineModels(). ` +
-        `For zero-config runtime bootstrap, pass schema models: createDB({ models: [defineModel(...)] }).`,
+      `[HyperTillDB] createDB() requires { database } when model metadata is missing. ` +
+        `Use defineModel(...) models, or enable the HyperTill Type Metadata Babel plugin for dbModel<T>() auto-bootstrap.`,
     )
   }
+
+  const migrationState = shouldAutoBootstrapWithoutDatabase
+    ? resolveMigrationState({
+        schemaVersion,
+        entries: definedModels.entries,
+        migration,
+      })
+    : {
+        schemaVersion,
+        sqliteMigrations: null,
+        report: null,
+        snapshot: null,
+      }
 
   const runtime = bootstrapDatabase({
     name,
     database,
     definedModels,
-    schemaVersion,
+    schemaVersion: migrationState.schemaVersion,
     platform,
     native,
     web,
+    sqliteMigrations: migrationState.sqliteMigrations,
   })
 
   const baseClient = createHyperTill({
@@ -455,12 +709,15 @@ export const createDB = ({
     events: baseClient.events,
     models: definedModels.models,
     registry: definedModels,
+    migration: migrationState.report,
+    snapshot: migrationState.snapshot,
     getModel: baseClient.getModel.bind(baseClient),
   }
 
   definedModels.entries.forEach((entry) => {
     const baseApi = baseClient[entry.table]
-    const wrappedApi = buildModelApi(baseApi, entry)
+    const model = definedModels.models.find((candidate) => candidate.table === entry.table)
+    const wrappedApi = buildModelApi(baseApi, entry, model)
     client[entry.table] = wrappedApi
     injectRootHooks(client, entry)
   })

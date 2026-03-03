@@ -3,6 +3,7 @@ import { renderHook } from '@testing-library/react-hooks'
 import { mockDatabase } from '../__tests__/testModels'
 import { defineModel, string, number, boolean, relation as schemaRelation } from '../modeling'
 import { createDB } from './createDB'
+import { createSchemaSnapshot } from './migrations'
 import { dbModel, defineModels } from './defineModels'
 import { relation } from './relation'
 
@@ -13,6 +14,12 @@ describe('typeFirst', () => {
   beforeEach(() => {
     ;({ database, tasks } = mockDatabase())
   })
+
+  const baseSystemColumns = [
+    { name: 'created_at', type: 'number', isIndexed: true, isOptional: false },
+    { name: 'updated_at', type: 'number', isIndexed: true, isOptional: false },
+    { name: 'deleted_at', type: 'number', isIndexed: true, isOptional: true },
+  ]
 
   it('builds model registry with relation metadata', () => {
     const models = defineModels({
@@ -197,7 +204,7 @@ describe('typeFirst', () => {
     expect(Array.isArray(hook.result.current.data) || hook.result.current.isLoading).toBe(true)
   })
 
-  it('requires explicit database for dbModel()/defineModels() until type extraction is enabled', () => {
+  it('requires explicit database when dbModel metadata is missing', () => {
     const models = defineModels({
       Task: dbModel(),
     })
@@ -208,5 +215,151 @@ describe('typeFirst', () => {
         models,
       }),
     ).toThrow(/requires \{ database \}/)
+  })
+
+  it('auto-bootstraps dbModel metadata and maps camelCase fields to storage columns', async () => {
+    const models = defineModels({
+      Author: dbModel({
+        __typeMeta: {
+          fields: {
+            name: { kind: 'string', optional: false },
+          },
+        },
+      }),
+      Book: dbModel({
+        __typeMeta: {
+          fields: {
+            title: { kind: 'string', optional: false },
+            authorId: { kind: 'string', optional: false },
+          },
+        },
+      }),
+    })
+
+    const db = createDB({
+      name: 'dbmodel-type-meta',
+      models,
+      platform: 'web',
+    })
+
+    const author = await db.authors.create({ name: 'Cal Newport' })
+    expect(author.error).toBe(null)
+    const authorId = String(author.data?.id)
+    expect(typeof db.useBooksByAuthorId).toBe('function')
+
+    const createdBook = await db.books.create({
+      title: 'Deep Work',
+      authorId,
+    })
+    expect(createdBook.error).toBe(null)
+    expect(createdBook.data?.authorId).toBe(authorId)
+
+    const list = await db.books.fetch({
+      where: { authorId },
+      limit: 10,
+    })
+    expect(list.error).toBe(null)
+    expect((list.data || []).length).toBe(1)
+    expect(list.data?.[0]?.authorId).toBe(authorId)
+  })
+
+  it('plans additive smart migrations from previous snapshots', () => {
+    const previousSnapshot = createSchemaSnapshot(
+      [
+        {
+          table: 'tasks',
+          columns: [{ name: 'name', type: 'string', isIndexed: false, isOptional: false }].concat(
+            baseSystemColumns,
+          ),
+        },
+      ],
+      1,
+    )
+
+    const TaskModel = defineModel('tasks', {
+      name: string(),
+      is_done: boolean(),
+    })
+
+    const db = createDB({
+      name: 'migration-additive',
+      models: [TaskModel],
+      platform: 'web',
+      migration: {
+        mode: 'smart',
+        previousSnapshot,
+      },
+    })
+
+    expect(db.migration).toBeTruthy()
+    expect(db.migration.hasChanges).toBe(true)
+    expect(db.migration.blockedDestructiveChanges).toHaveLength(0)
+    expect(db.migration.nextSchemaVersion).toBe(2)
+    expect(db.snapshot.schemaVersion).toBe(2)
+    expect(Array.isArray(db.migration.steps)).toBe(true)
+    expect(db.migration.steps.length).toBeGreaterThan(0)
+  })
+
+  it('blocks destructive schema changes when columns are removed', () => {
+    const previousSnapshot = createSchemaSnapshot(
+      [
+        {
+          table: 'tasks',
+          columns: [
+            { name: 'name', type: 'string', isIndexed: false, isOptional: false },
+            { name: 'is_done', type: 'boolean', isIndexed: false, isOptional: false },
+          ].concat(baseSystemColumns),
+        },
+      ],
+      3,
+    )
+
+    const TaskModel = defineModel('tasks', {
+      is_done: boolean(),
+    })
+
+    expect(() =>
+      createDB({
+        name: 'migration-destructive',
+        models: [TaskModel],
+        platform: 'web',
+        migration: {
+          mode: 'smart',
+          previousSnapshot,
+        },
+      }),
+    ).toThrow(/Destructive migration changes are blocked/)
+  })
+
+  it('detects simple one-to-one rename and avoids destructive block in smart mode', () => {
+    const previousSnapshot = createSchemaSnapshot(
+      [
+        {
+          table: 'tasks',
+          columns: [{ name: 'name', type: 'string', isIndexed: false, isOptional: false }].concat(
+            baseSystemColumns,
+          ),
+        },
+      ],
+      5,
+    )
+
+    const TaskModel = defineModel('tasks', {
+      title: string(),
+    })
+
+    const db = createDB({
+      name: 'migration-rename',
+      models: [TaskModel],
+      platform: 'web',
+      migration: {
+        mode: 'smart',
+        previousSnapshot,
+      },
+    })
+
+    expect(db.migration.blockedDestructiveChanges).toHaveLength(0)
+    expect(db.migration.renameMap.tasks.name).toBe('title')
+    expect(db.snapshot.schemaVersion).toBe(6)
   })
 })

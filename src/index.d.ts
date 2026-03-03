@@ -13,6 +13,9 @@ export {
   toSnakeCase,
   createHyperTill,
   createDB,
+  createSchemaSnapshot,
+  planSchemaMigration,
+  formatMigrationBlockedError,
 } from './hypertill'
 
 export type {
@@ -33,6 +36,12 @@ export type {
   CreateDBOptions,
   CreateSchemaDBOptions,
   SchemaDBClient,
+  SchemaSnapshotColumn,
+  SchemaSnapshotTable,
+  SchemaSnapshot,
+  MigrationBlockedChange,
+  MigrationPlan,
+  MigrationOptions,
   ModelDefinition,
   ModelField,
   FieldBuilder,

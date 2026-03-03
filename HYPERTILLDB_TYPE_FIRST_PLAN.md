@@ -24,12 +24,17 @@ Implemented now in code (`src/typeFirst/*`):
 - simplified mutation result shape:
   - `{ data, error, loading, status, progress }`
 - default timestamp injection on writes (`created_at`, `updated_at`) and soft-delete mode support.
+- metadata-driven auto-bootstrap for `dbModel<T>()` when `__typeMeta` is present.
+- first working Babel plugin for type metadata extraction:
+  - `@onchez/hypertilldb/babel-plugin`
+  - transforms `dbModel<Type>()` by injecting hidden `__typeMeta` field definitions.
+- camelCase-to-snake_case runtime mapping for model fields in create/update/fetch/hooks.
 
 Still intentionally deferred:
 
 - sync engine work (push/pull/connectors/conflict resolution)
 - internal migration planner execution for destructive changes
-- build-time TS type extraction transformer (current runtime still needs `dbModel<T>()` declarations)
+- full type-checker-backed extraction across complex TS project boundaries (current plugin covers common alias/interface flows and relative imports)
 - advanced relation cascade policies and server connector packs
 
 ---

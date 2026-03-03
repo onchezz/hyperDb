@@ -12,12 +12,13 @@ Implemented now:
 2. reactive hooks without manual subscription setup
 3. simple mutation response shape with progress metadata
 4. soft/hard delete modes per model
+5. `dbModel<T>()` type metadata extraction via Babel plugin (`@onchez/hypertilldb/babel-plugin`)
+6. smart migration planning for additive/rename-safe changes with destructive-change blocking
 
 Planned next:
 
-1. internal type extraction (remove runtime model descriptors)
-2. strict migration planning and mapping
-3. sync engine and backend connector packs
+1. full type-checker-backed extraction for advanced cross-file TS patterns
+2. sync engine and backend connector packs
 
 ## Install
 
@@ -87,10 +88,25 @@ export const models = defineModels(
 
 export const db = createDB({
   name: 'books-app',
-  database,
   models,
 })
 ```
+
+### Enable the Babel type-metadata plugin
+
+Add this plugin in `babel.config.js` so `dbModel<Type>()` gets runtime metadata automatically:
+
+```js
+module.exports = function (api) {
+  api.cache(true)
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: ['@onchez/hypertilldb/babel-plugin'],
+  }
+}
+```
+
+Without this plugin (or without `defineModel(...)`), `createDB()` needs an explicit `database`.
 
 ## Reactive queries
 
@@ -200,7 +216,26 @@ camelCase fields map to snake_case storage columns.
 
 ## Migrations and sync
 
-Migration automation and the sync engine are next milestones. Current package focus is the type-first local API and reactive runtime.
+Migration planning is now available:
+
+```ts
+const db = createDB({
+  name: 'books-app',
+  models,
+  migration: {
+    mode: 'smart',
+    previousSnapshot,
+    detectRename: 'same-type-one-to-one',
+  },
+})
+```
+
+Available migration metadata:
+
+- `db.migration` (diff/plan/report)
+- `db.snapshot` (save and pass back as `previousSnapshot` on next launch)
+
+Sync engine and backend connector packs are still in progress.
 
 ## Events
 

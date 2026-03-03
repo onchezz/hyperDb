@@ -15,6 +15,9 @@ export {
   toSnakeCase,
   createHyperTill,
   createDB,
+  createSchemaSnapshot,
+  planSchemaMigration,
+  formatMigrationBlockedError,
 } from './hypertill'
 
 export { core }
@@ -71,6 +74,12 @@ export type {
   MutationProgress,
   MutationResult,
   CreateDBOptions,
+  SchemaSnapshotColumn,
+  SchemaSnapshotTable,
+  SchemaSnapshot,
+  MigrationBlockedChange,
+  MigrationPlan,
+  MigrationOptions,
   ModelDefinition,
   ModelField,
   FieldBuilder,

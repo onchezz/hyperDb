@@ -66,6 +66,7 @@
     "url": "https://github.com/onchezz/hyperDb.git"
   },
   "dependencies": {
+    "@babel/parser": "^7.28.4",
     "@babel/runtime": "7.26.0",
     "@nozbe/simdjson": "3.9.4",
     "@nozbe/sqlite": "3.46.0",
